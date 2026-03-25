@@ -1,3 +1,4 @@
+export { classifyProperty } from "./classify.js";
 export {
     thresholds,
     maxDuration,
