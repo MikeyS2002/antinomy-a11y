@@ -1,0 +1,35 @@
+{
+    "name": "@antinomy-a11y",
+    "version": "1.0.0",
+    "description": "Accessibility utilities for Vue 3 — motion adaptation and visual accessibility enforcement",
+    "type": "module",
+    "main": "./dist/index.js",
+    "exports": {
+        ".": "./dist/index.js",
+        "./motion": "./dist/motion/index.js"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "vite build"
+    },
+    "keywords": [
+        "Accessibility",
+        "Motion",
+        "Visual"
+    ],
+    "author": "Mike Schaper",
+    "license": "ISC",
+    "peerDependencies": {
+        "vue": "^3.4.0",
+        "motion-v": "^2.0.0"
+    },
+    "dependencies": {
+        "@vueuse/integrations": "^14.2.1",
+        "focus-trap": "^8.0.1"
+    },
+    "devDependencies": {
+        "vite": "^8.0.1"
+    }
+}
