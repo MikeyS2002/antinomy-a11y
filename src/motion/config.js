@@ -1,9 +1,9 @@
 /**
- * Thresholds for classifying animation risk levels
+ * Default thresholds - can be overridden via configureMotion()
  * Values under this thresholds are considered moderate (safe enough to keep with clamping)
  * Values above these are considered high risk (should be neutralized)
  */
-export const thresholds = {
+export let thresholds = {
     translation: 50, // pixels x/y movement beyond 50px is high risk
     scale: 0.2, // scale beyond 0.2 is high risk
     rotation: 10, // rotation beyond 10 is too high risk
@@ -13,16 +13,16 @@ export const thresholds = {
  * Maximum animation duration when reduced motion is active
  * Keeps transitions perceptible but brief
  */
-export const maxDuration = 0.2; // s
+export let maxDuration = 0.2; // s
 
 /**
  * Easing functions used in reduced motion mode
  * Spatial get linear (no acceleration is less disorienting)
  * Opacity gets ease-out (feels more natural for fades)
  */
-export const reducedEasing = {
+export let reducedEasing = {
     spatial: "linear",
-    opacity: [0, 0, 0.58, 1],
+    opacity: [0, 0, 0.58, 1], // NEW ease-out as cubic bezier
 };
 
 /**
@@ -47,3 +47,24 @@ export const propertyCategories = {
     opacity: "safe",
     clipPath: "safe",
 };
+
+/**
+ * Allows projects to override default thresholds and timing
+ * Call once
+ *
+ * @param {object} config
+ * @param {object} [config.thresholds]
+ * @param {number} [config.maxDuration]
+ * @param {object} [config.reducedEasing]
+ */
+export function configureMotion(config = {}) {
+    if (config.thresholds) {
+        thresholds = { ...thresholds, ...config.thresholds };
+    }
+    if (config.maxDuration !== undefined) {
+        maxDuration = config.maxDuration;
+    }
+    if (config.reducedEasing) {
+        reducedEasing = { ...reducedEasing, ...config.reducedEasing };
+    }
+}
