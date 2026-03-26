@@ -29,6 +29,19 @@ export function isSafeEasing(easing) {
         return y1 >= 0 && y1 <= 1 && y2 >= 0 && y2 <= 1;
     }
 
-    // Anything else — not safe
+    // Anything else = not safe
     return false;
+}
+
+/**
+ * NEW Checks if a transition type is inherently unsafe (spring, bounce, inertia).
+ * These types produce oscillation or overshoot by design and cannot be
+ * made safe by adjusting parameters — they need to be removed entirely.
+ *
+ * @param {string|undefined} type
+ * @returns {boolean}
+ */
+export function isUnsafeTransitionType(type) {
+    if (!type) return false;
+    return ["spring", "inertia"].includes(type);
 }
