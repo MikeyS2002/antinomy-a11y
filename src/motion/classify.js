@@ -46,6 +46,7 @@ export function classifyProperty(property, initialValue, animateValue) {
         distance = Math.abs(numInitial - numAnimate);
     }
 
+    // Compare distance against thresholds
     // Classify spatial properties against translation threshold
     if (category === "spatial") {
         return distance > thresholds.translation ? "high" : "moderate";

@@ -45,6 +45,7 @@ export function adaptMotion(initial, animate, transition = {}) {
 
         switch (risk) {
             case "high": {
+                // Fully neutralize if the value exceeds thresholds
                 const neutral = getNeutralValue(property);
                 if (property in initial) adaptedInitial[property] = neutral;
                 if (property in animate) adaptedAnimate[property] = neutral;
@@ -52,6 +53,7 @@ export function adaptMotion(initial, animate, transition = {}) {
             }
 
             case "moderate": {
+                // Clamp to safe threshold boundaries instead of fully removing
                 if (property in initial)
                     adaptedInitial[property] = clampToThreshold(
                         property,
@@ -87,6 +89,7 @@ export function adaptMotion(initial, animate, transition = {}) {
         }
     }
 
+    // Build per property transitions
     const adaptedTransition = buildReducedTransition(transition, allProperties);
 
     return {
@@ -101,9 +104,12 @@ function clampToThreshold(property, value) {
     const category = propertyCategories[property];
     const numValue = typeof value === "string" ? parseFloat(value) : value;
 
+    // Non-numeric values (clipPath strings like "inset(0% 100% 0% 0%)")
+    // can't be clamped, return unchanged
     if (isNaN(numValue)) return value;
 
     if (category === "spatial") {
+        // Clamp translation
         return Math.max(
             -thresholds.translation,
             Math.min(thresholds.translation, numValue),
@@ -111,6 +117,7 @@ function clampToThreshold(property, value) {
     }
 
     if (category === "scale") {
+        // Clamp scale
         return Math.max(
             1 - thresholds.scale,
             Math.min(1 + thresholds.scale, numValue),
@@ -118,6 +125,7 @@ function clampToThreshold(property, value) {
     }
 
     if (category === "rotation") {
+        // Clamp rotation
         return Math.max(
             -thresholds.rotation,
             Math.min(thresholds.rotation, numValue),
@@ -153,12 +161,14 @@ function buildReducedTransition(originalTransition, properties) {
         base.velocity = undefined;
     }
 
+    // Check what property types we have
     const hasSpatial = [...properties].some((p) => {
         const cat = propertyCategories[p];
         return cat === "spatial" || cat === "scale" || cat === "rotation";
     });
     const hasOpacity = properties.has("opacity");
 
+    // Determine spatial easing keep original if safe, replace if not
     const spatialEasing = isSafeEasing(originalTransition.ease)
         ? originalTransition.ease
         : reducedEasing.spatial;
