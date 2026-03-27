@@ -9,6 +9,58 @@ import {
 } from "./config.js";
 
 /**
+ * Adapts a single keyframe object (initial, animate, exit).
+ * This is the core logic extracted so it can be reused by both the function API and the component wrapper
+ *
+ * @param {Record<string, any>} from - The starting state
+ * @param {Record<string, any>} to - The ending state
+ * @param {Record<string, any>} target - The keyframe to adapt (like from, to, or exit)
+ * @returns {Record<string, any>}
+ */
+export function adaptKeyframe(from, to, target) {
+    const adapted = {};
+    const allProperties = new Set([
+        ...Object.keys(from),
+        ...Object.keys(to),
+        ...Object.keys(target),
+    ]);
+
+    for (const property of allProperties) {
+        if (!(property in target)) continue;
+
+        const initialValue = from[property] ?? getNeutralValue(property);
+        const animateValue = to[property] ?? getNeutralValue(property);
+        const risk = classifyProperty(property, initialValue, animateValue);
+
+        switch (risk) {
+            case "high":
+                adapted[property] = getNeutralValue(property);
+                break;
+            case "moderate":
+                adapted[property] = clampToThreshold(
+                    property,
+                    target[property],
+                );
+                break;
+            case "low":
+                adapted[property] = target[property];
+                break;
+            case "unknown":
+                adapted[property] = target[property];
+                if (import.meta.env?.DEV) {
+                    console.warn(
+                        `[a11y-motion] Unknown property "${property}" — passing through unchanged. ` +
+                            `Consider adding it to propertyCategories in config.js.`,
+                    );
+                }
+                break;
+        }
+    }
+
+    return adapted;
+}
+
+/**
  * Adapts animation based on reduced motion preference
  *
  * When reduced motion is on:
@@ -23,81 +75,57 @@ import {
  * @param {Record<string, any>} [transition] - Optional transition config
  * @returns {{ initial: Record<string, any>, animate: Record<string, any>, transition: Record<string, any> }}
  */
-export function adaptMotion(initial, animate, transition = {}) {
+export function adaptMotion(initial, animate, transition = {}, exit = null) {
     const reducedMotion = useReducedMotion();
 
     if (!reducedMotion.value) {
-        return { initial, animate, transition };
+        const result = { initial, animate, transition };
+        if (exit) result.exit = exit;
+        return result;
     }
-
-    const adaptedInitial = {};
-    const adaptedAnimate = {};
 
     const allProperties = new Set([
         ...Object.keys(initial),
         ...Object.keys(animate),
+        ...(exit ? Object.keys(exit) : []),
     ]);
 
-    for (const property of allProperties) {
-        const initialValue = initial[property] ?? getNeutralValue(property);
-        const animateValue = animate[property] ?? getNeutralValue(property);
-        const risk = classifyProperty(property, initialValue, animateValue);
-
-        switch (risk) {
-            case "high": {
-                // Fully neutralize if the value exceeds thresholds
-                const neutral = getNeutralValue(property);
-                if (property in initial) adaptedInitial[property] = neutral;
-                if (property in animate) adaptedAnimate[property] = neutral;
-                break;
-            }
-
-            case "moderate": {
-                // Clamp to safe threshold boundaries instead of fully removing
-                if (property in initial)
-                    adaptedInitial[property] = clampToThreshold(
-                        property,
-                        initialValue,
-                    );
-                if (property in animate)
-                    adaptedAnimate[property] = clampToThreshold(
-                        property,
-                        animateValue,
-                    );
-                break;
-            }
-
-            case "low":
-                if (property in initial)
-                    adaptedInitial[property] = initial[property];
-                if (property in animate)
-                    adaptedAnimate[property] = animate[property];
-                break;
-
-            case "unknown":
-                if (property in initial)
-                    adaptedInitial[property] = initial[property];
-                if (property in animate)
-                    adaptedAnimate[property] = animate[property];
-                if (import.meta.env?.DEV) {
-                    console.warn(
-                        `[a11y-motion] Unknown property "${property}" — passing through unchanged. ` +
-                            `Consider adding it to propertyCategories in config.js.`,
-                    );
-                }
-                break;
-        }
-    }
-
+    const adaptedInitial = adaptKeyframe(initial, animate, initial);
+    const adaptedAnimate = adaptKeyframe(initial, animate, animate);
     // Build per property transitions
     const adaptedTransition = buildReducedTransition(transition, allProperties);
 
-    return {
+    const result = {
         initial: adaptedInitial,
         animate: adaptedAnimate,
         transition: adaptedTransition,
     };
+
+    if (exit) {
+        result.exit = adaptKeyframe(initial, animate, exit);
+    }
+
+    return result;
 }
+
+/**
+ * Adapts a full variants object. Each variant's keyframe values are adapted using the initial -> animate pair for risk classification
+ *
+ * @param {Record<string, Record<string, any>>} variants - example { initial: { y: '120%' }, animate: { y: 0 }, exit: { y: '120%' } }
+ * @returns {Record<string, Record<string, any>>}
+ */
+export function adaptVariants(variants) {
+    const initial = variants.initial || {};
+    const animate = variants.animate || {};
+
+    const adapted = {};
+    for (const [key, keyframe] of Object.entries(variants)) {
+        adapted[key] = adaptKeyframe(initial, animate, keyframe);
+    }
+    return adapted;
+}
+
+// Internal helpers
 
 // Clamps a value to the safe threshold
 function clampToThreshold(property, value) {
@@ -115,7 +143,6 @@ function clampToThreshold(property, value) {
             Math.min(thresholds.translation, numValue),
         );
     }
-
     if (category === "scale") {
         // Clamp scale
         return Math.max(
@@ -123,7 +150,6 @@ function clampToThreshold(property, value) {
             Math.min(1 + thresholds.scale, numValue),
         );
     }
-
     if (category === "rotation") {
         // Clamp rotation
         return Math.max(
@@ -131,7 +157,6 @@ function clampToThreshold(property, value) {
             Math.min(thresholds.rotation, numValue),
         );
     }
-
     return value;
 }
 
@@ -203,12 +228,10 @@ function getNeutralValue(property) {
         case "rotateY":
         case "rotateZ":
             return 0;
-
         case "scale":
         case "scaleX":
         case "scaleY":
             return 1;
-
         default:
             return 0;
     }
