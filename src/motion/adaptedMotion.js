@@ -1,20 +1,14 @@
 import { h, computed, defineComponent } from "vue";
 import { motion, useReducedMotion } from "motion-v";
 import { adaptKeyframe, adaptVariants } from "./adaptMotion.js";
-import { maxDuration, reducedEasing, propertyCategories } from "./config.js";
+import { reducedEasing, propertyCategories } from "./config.js";
 import { isSafeEasing, isUnsafeTransitionType } from "./easing.js";
 
 /**
  * Builds a reduced transition for the component wrapper
  */
 function buildReducedTransition(originalTransition, properties) {
-    const base = {
-        ...originalTransition,
-        duration: Math.min(
-            originalTransition.duration ?? maxDuration,
-            maxDuration,
-        ),
-    };
+    const base = { ...originalTransition };
 
     if (isUnsafeTransitionType(originalTransition.type)) {
         base.type = undefined;
@@ -35,16 +29,7 @@ function buildReducedTransition(originalTransition, properties) {
         ? originalTransition.ease
         : reducedEasing.spatial;
 
-    if (hasSpatial && hasOpacity) {
-        base.ease = spatialEasing;
-        base.opacity = {
-            duration: Math.min(
-                originalTransition.duration ?? maxDuration,
-                maxDuration,
-            ),
-            ease: reducedEasing.opacity,
-        };
-    } else if (hasOpacity && !hasSpatial) {
+    if (hasOpacity && !hasSpatial) {
         base.ease = reducedEasing.opacity;
     } else {
         base.ease = spatialEasing;
@@ -158,6 +143,8 @@ function createAdaptedMotionComponent(element) {
 const componentCache = {};
 
 /**
+ * Proxy that creates accessibility adapted motion components on demand.
+ *
  * Usage: adaptedMotion.div, adaptedMotion.span, adaptedMotion.button, etc.
  * AnimatePresence, transitions, variants stay the same
  */

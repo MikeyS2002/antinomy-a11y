@@ -5,15 +5,9 @@
  */
 export let thresholds = {
     translation: 50, // pixels x/y movement beyond 50px is high risk
-    scale: 0.2, // scale beyond 0.2 is high risk
+    scale: 0.15, // scale beyond 0.15 is high risk
     rotation: 10, // rotation beyond 10 is too high risk
 };
-
-/**
- * Maximum animation duration when reduced motion is active
- * Keeps transitions perceptible but brief
- */
-export let maxDuration = 0.2; // s
 
 /**
  * Easing functions used in reduced motion mode
@@ -53,16 +47,12 @@ export const propertyCategories = {
  * Call once
  *
  * @param {object} config
- * @param {object} [config.thresholds]
- * @param {number} [config.maxDuration]
- * @param {object} [config.reducedEasing]
+ * @param {object} [config.thresholds] NEW - Override risk thresholds
+ * @param {object} [config.reducedEasing] NEW - Override easing functions
  */
 export function configureMotion(config = {}) {
     if (config.thresholds) {
         thresholds = { ...thresholds, ...config.thresholds };
-    }
-    if (config.maxDuration !== undefined) {
-        maxDuration = config.maxDuration;
     }
     if (config.reducedEasing) {
         reducedEasing = { ...reducedEasing, ...config.reducedEasing };

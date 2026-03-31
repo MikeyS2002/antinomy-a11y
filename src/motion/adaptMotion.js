@@ -1,12 +1,7 @@
 import { useReducedMotion } from "motion-v";
 import { classifyProperty } from "./classify.js";
 import { isSafeEasing, isUnsafeTransitionType } from "./easing.js";
-import {
-    maxDuration,
-    reducedEasing,
-    thresholds,
-    propertyCategories,
-} from "./config.js";
+import { reducedEasing, thresholds, propertyCategories } from "./config.js";
 
 /**
  * Adapts a single keyframe object (initial, animate, exit).
@@ -73,6 +68,7 @@ export function adaptKeyframe(from, to, target) {
  * @param {Record<string, any>} initial - The starting state
  * @param {Record<string, any>} animate - The end state
  * @param {Record<string, any>} [transition] - Optional transition config
+ * @param {Record<string, any>} [exit] - Optional exit state for AnimatePresence
  * @returns {{ initial: Record<string, any>, animate: Record<string, any>, transition: Record<string, any> }}
  */
 export function adaptMotion(initial, animate, transition = {}, exit = null) {
@@ -165,16 +161,10 @@ function clampToThreshold(property, value) {
  * - safe easing preserved unsafe easing replaced
  * - spring types removed
  * - opacity gets ease-out
- * - duration capped at 200ms
+ * - duration and delay from the original transition
  */
 function buildReducedTransition(originalTransition, properties) {
-    const base = {
-        ...originalTransition,
-        duration: Math.min(
-            originalTransition.duration ?? maxDuration,
-            maxDuration,
-        ),
-    };
+    const base = { ...originalTransition };
 
     // Remove spring physics
     if (isUnsafeTransitionType(originalTransition.type)) {
@@ -198,16 +188,7 @@ function buildReducedTransition(originalTransition, properties) {
         ? originalTransition.ease
         : reducedEasing.spatial;
 
-    if (hasSpatial && hasOpacity) {
-        base.ease = spatialEasing;
-        base.opacity = {
-            duration: Math.min(
-                originalTransition.duration ?? maxDuration,
-                maxDuration,
-            ),
-            ease: reducedEasing.opacity,
-        };
-    } else if (hasOpacity && !hasSpatial) {
+    if (hasOpacity && !hasSpatial) {
         base.ease = reducedEasing.opacity;
     } else {
         base.ease = spatialEasing;
