@@ -32,19 +32,22 @@ export function adaptKeyframe(from, to, target) {
 
         switch (risk) {
             case "high":
-                // When a spatial property uses ±100% (a common off-screen slide pattern),
-                // replace the movement with an opacity fade instead of neutralizing to 0.
+                // Replace certain appear or disappear patterns with an opacity fade
+                // Instead of just neutralizing the property
                 if (
-                    isSpatialSlideProperty(property) &&
-                    (isPercentageSlide(from[property]) ||
-                        isPercentageSlide(to[property])) &&
                     !slideToFadeInjected &&
-                    !("opacity" in target)
+                    !("opacity" in target) &&
+                    isAppearPattern(property, from[property], to[property])
                 ) {
-                    // The side with ±100% is off-screen → opacity 0; the neutral side → opacity 1
-                    adapted.opacity = isPercentageSlide(target[property]) ? 0 : 1;
+                    // The invisible side = opacity 0 and the visible side = opacity 1
+                    adapted.opacity = isInvisibleSide(
+                        property,
+                        target[property],
+                    )
+                        ? 0
+                        : 1;
                     slideToFadeInjected = true;
-                    // Skip the spatial property — no movement at all
+                    // no movement
                 } else {
                     adapted[property] = getNeutralValue(property);
                 }
@@ -215,21 +218,31 @@ function buildReducedTransition(originalTransition, properties) {
     return base;
 }
 
-// Returns true if a value is exactly "100%" or "-100%" (off-screen slide pattern)
-function isPercentageSlide(value) {
+// Returns true when a value is a percentage string whose absolute value is >= 100%
+// fully off-screen for example 100%, -100%, 120%, -150%
+function isOffScreenPercent(value) {
     if (typeof value !== "string") return false;
-    const trimmed = value.trim();
-    return trimmed === "100%" || trimmed === "-100%";
+    const n = parseFloat(value);
+    return !isNaN(n) && Math.abs(n) >= 100 && value.trim().endsWith("%");
 }
 
-// Returns true for spatial properties that can carry an off-screen slide
-function isSpatialSlideProperty(property) {
-    return (
-        property === "x" ||
-        property === "y" ||
-        property === "translateX" ||
-        property === "translateY"
-    );
+// Returns true when the property and values represent an appear/disappear
+function isAppearPattern(property, fromVal, toVal) {
+    const category = propertyCategories[property];
+    if (category === "spatial") {
+        return isOffScreenPercent(fromVal) || isOffScreenPercent(toVal);
+    }
+    if (category === "scale") {
+        return fromVal === 0 || toVal === 0;
+    }
+    return false;
+}
+
+function isInvisibleSide(property, value) {
+    const category = propertyCategories[property];
+    if (category === "spatial") return isOffScreenPercent(value);
+    if (category === "scale") return value === 0;
+    return false;
 }
 
 // returns the neutral (no movement) for its property

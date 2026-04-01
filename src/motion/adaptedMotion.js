@@ -1,4 +1,11 @@
-import { h, computed, defineComponent, ref, onMounted, getCurrentInstance } from "vue";
+import {
+    h,
+    computed,
+    defineComponent,
+    ref,
+    onMounted,
+    getCurrentInstance,
+} from "vue";
 import { motion, AnimatePresence, useReducedMotion } from "motion-v";
 import { adaptKeyframe, adaptVariants } from "./adaptMotion.js";
 import { reducedEasing, propertyCategories } from "./config.js";
@@ -42,19 +49,26 @@ function buildReducedTransition(originalTransition, properties) {
  * Returns true if initial or animate contains a ±100% slide on a spatial property.
  * Used to decide whether to wait for an exiting sibling before fading in.
  */
-function hasSlideToFade(initial, animate) {
+function willBecomeAFade(initial, animate) {
     if (!initial || !animate) return false;
+
+    // Spatial endpoints that are fully off-screen
     for (const prop of ["x", "y", "translateX", "translateY"]) {
         const a = initial[prop];
         const b = animate[prop];
-        if (
-            (typeof a === "string" &&
-                (a.trim() === "100%" || a.trim() === "-100%")) ||
-            (typeof b === "string" &&
-                (b.trim() === "100%" || b.trim() === "-100%"))
-        )
-            return true;
+        const isOffScreen = (v) => {
+            if (typeof v !== "string") return false;
+            const n = parseFloat(v);
+            return !isNaN(n) && Math.abs(n) >= 100 && v.trim().endsWith("%");
+        };
+        if (isOffScreen(a) || isOffScreen(b)) return true;
     }
+
+    // Scale 0 on either end
+    for (const prop of ["scale", "scaleX", "scaleY"]) {
+        if (initial[prop] === 0 || animate[prop] === 0) return true;
+    }
+
     return false;
 }
 
@@ -77,7 +91,7 @@ function createAdaptedMotionComponent(element) {
 
             onMounted(() => {
                 if (!reducedMotion.value) return;
-                if (!hasSlideToFade(attrs.initial, attrs.animate)) return;
+                if (!willBecomeAFade(attrs.initial, attrs.animate)) return;
 
                 // motion-v stamps every presence-managed element with data-ap="<presenceId>"
                 const el = getCurrentInstance()?.proxy?.$el;
