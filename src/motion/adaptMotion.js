@@ -20,6 +20,9 @@ export function adaptKeyframe(from, to, target) {
         ...Object.keys(target),
     ]);
 
+    // Track whether we've already injected an opacity fade for a slide replacement
+    let slideToFadeInjected = false;
+
     for (const property of allProperties) {
         if (!(property in target)) continue;
 
@@ -29,7 +32,22 @@ export function adaptKeyframe(from, to, target) {
 
         switch (risk) {
             case "high":
-                adapted[property] = getNeutralValue(property);
+                // When a spatial property uses ±100% (a common off-screen slide pattern),
+                // replace the movement with an opacity fade instead of neutralizing to 0.
+                if (
+                    isSpatialSlideProperty(property) &&
+                    (isPercentageSlide(from[property]) ||
+                        isPercentageSlide(to[property])) &&
+                    !slideToFadeInjected &&
+                    !("opacity" in target)
+                ) {
+                    // The side with ±100% is off-screen → opacity 0; the neutral side → opacity 1
+                    adapted.opacity = isPercentageSlide(target[property]) ? 0 : 1;
+                    slideToFadeInjected = true;
+                    // Skip the spatial property — no movement at all
+                } else {
+                    adapted[property] = getNeutralValue(property);
+                }
                 break;
             case "moderate":
                 adapted[property] = clampToThreshold(
@@ -195,6 +213,23 @@ function buildReducedTransition(originalTransition, properties) {
     }
 
     return base;
+}
+
+// Returns true if a value is exactly "100%" or "-100%" (off-screen slide pattern)
+function isPercentageSlide(value) {
+    if (typeof value !== "string") return false;
+    const trimmed = value.trim();
+    return trimmed === "100%" || trimmed === "-100%";
+}
+
+// Returns true for spatial properties that can carry an off-screen slide
+function isSpatialSlideProperty(property) {
+    return (
+        property === "x" ||
+        property === "y" ||
+        property === "translateX" ||
+        property === "translateY"
+    );
 }
 
 // returns the neutral (no movement) for its property

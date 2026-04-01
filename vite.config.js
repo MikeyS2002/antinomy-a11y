@@ -4,12 +4,17 @@ import { resolve } from "path";
 export default defineConfig({
     build: {
         lib: {
-            entry: resolve(__dirname, "src/index.js"),
+            entry: {
+                index: resolve(__dirname, "src/motion/index.js"),
+                "motion/index": resolve(__dirname, "src/motion/index.js"),
+            },
             formats: ["es"],
-            fileName: "index",
+            fileName: (format, entryName) => `${entryName}.js`,
         },
         rollupOptions: {
             external: ["vue", "motion-v"],
         },
+        outDir: "dist",
+        emptyOutDir: true,
     },
 });

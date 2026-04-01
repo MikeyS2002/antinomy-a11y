@@ -1,5 +1,5 @@
-import { h, computed, defineComponent } from "vue";
-import { motion, useReducedMotion } from "motion-v";
+import { h, computed, defineComponent, ref, onMounted, getCurrentInstance } from "vue";
+import { motion, AnimatePresence, useReducedMotion } from "motion-v";
 import { adaptKeyframe, adaptVariants } from "./adaptMotion.js";
 import { reducedEasing, propertyCategories } from "./config.js";
 import { isSafeEasing, isUnsafeTransitionType } from "./easing.js";
@@ -39,6 +39,26 @@ function buildReducedTransition(originalTransition, properties) {
 }
 
 /**
+ * Returns true if initial or animate contains a ±100% slide on a spatial property.
+ * Used to decide whether to wait for an exiting sibling before fading in.
+ */
+function hasSlideToFade(initial, animate) {
+    if (!initial || !animate) return false;
+    for (const prop of ["x", "y", "translateX", "translateY"]) {
+        const a = initial[prop];
+        const b = animate[prop];
+        if (
+            (typeof a === "string" &&
+                (a.trim() === "100%" || a.trim() === "-100%")) ||
+            (typeof b === "string" &&
+                (b.trim() === "100%" || b.trim() === "-100%"))
+        )
+            return true;
+    }
+    return false;
+}
+
+/**
  * Creates a a11y adapted motion component for an HTML element
  * It intercepts motion props (initial, animate, exit, transition, variants)
  * Runs them through the risk check
@@ -49,6 +69,34 @@ function createAdaptedMotionComponent(element) {
         inheritAttrs: false,
         setup(_, { attrs, slots }) {
             const reducedMotion = useReducedMotion();
+
+            // When a slide is replaced with a fade inside a plain <AnimatePresence>,
+            // hold the entering element at opacity:0 until the exiting sibling is done.
+            // null = no hold needed, false = holding, true = released (animate immediately)
+            const slideReady = ref(null);
+
+            onMounted(() => {
+                if (!reducedMotion.value) return;
+                if (!hasSlideToFade(attrs.initial, attrs.animate)) return;
+
+                // motion-v stamps every presence-managed element with data-ap="<presenceId>"
+                const el = getCurrentInstance()?.proxy?.$el;
+                const presenceId = el?.getAttribute?.("data-ap");
+                if (!presenceId) return;
+
+                // More than one element sharing this presenceId means there's an exiting sibling
+                if (
+                    document.querySelectorAll(`[data-ap="${presenceId}"]`)
+                        .length <= 1
+                )
+                    return;
+
+                slideReady.value = false;
+                const exitMs = (attrs.transition?.duration ?? 0.3) * 1000;
+                setTimeout(() => {
+                    slideReady.value = null;
+                }, exitMs);
+            });
 
             const adaptedAttrs = computed(() => {
                 // When reduced motion is off, just pass everything through unchanged
@@ -131,6 +179,13 @@ function createAdaptedMotionComponent(element) {
                     };
                 }
 
+                // Hold the entering element at opacity:0 while an exiting sibling is
+                // still playing its fade. When slideReady flips back to null, the
+                // computed re-runs and motion-v picks up the { opacity: 1 } change.
+                if (slideReady.value === false) {
+                    result.animate = { opacity: 0 };
+                }
+
                 return result;
             });
 
@@ -143,15 +198,33 @@ function createAdaptedMotionComponent(element) {
 const componentCache = {};
 
 /**
+ * AnimatePresence wrapper that enforces mode="wait" when reduced motion is on,
+ * so exit animations (fades) always complete before entering animations start.
+ */
+const AdaptedAnimatePresence = defineComponent({
+    name: "AdaptedAnimatePresence",
+    setup(_, { attrs, slots }) {
+        const reducedMotion = useReducedMotion();
+        const adaptedAttrs = computed(() => {
+            if (!reducedMotion.value) return attrs;
+            return { ...attrs, mode: "wait" };
+        });
+        return () => h(AnimatePresence, adaptedAttrs.value, slots);
+    },
+});
+
+/**
  * Proxy that creates accessibility adapted motion components on demand.
  *
  * Usage: adaptedMotion.div, adaptedMotion.span, adaptedMotion.button, etc.
- * AnimatePresence, transitions, variants stay the same
+ * Use adaptedMotion.AnimatePresence in place of AnimatePresence — it automatically
+ * applies mode="wait" when reduced motion is on so exit fades finish before enters.
  */
 export const adaptedMotion = new Proxy(
-    {},
+    { AnimatePresence: AdaptedAnimatePresence },
     {
-        get(_, element) {
+        get(target, element) {
+            if (element in target) return target[element];
             if (!componentCache[element]) {
                 componentCache[element] = createAdaptedMotionComponent(element);
             }
