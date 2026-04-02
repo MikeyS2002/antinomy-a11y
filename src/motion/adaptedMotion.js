@@ -123,10 +123,14 @@ function createAdaptedMotionComponent(element) {
 
                 const result = { ...attrs };
 
+                // When size hasn't been measured yet, assume large so we don't
+                // play animations that would be stripped post-measurement.
+                const sizeForAdapt = elementSize.value ?? { width: Infinity, height: Infinity };
+
                 if (result.variants && typeof result.variants === "object") {
                     result.variants = adaptVariants(
                         result.variants,
-                        elementSize.value,
+                        sizeForAdapt,
                     );
                 }
 
@@ -144,13 +148,13 @@ function createAdaptedMotionComponent(element) {
                         initial,
                         animate,
                         initial,
-                        elementSize.value,
+                        sizeForAdapt,
                     );
                     result.animate = adaptKeyframe(
                         initial,
                         animate,
                         animate,
-                        elementSize.value,
+                        sizeForAdapt,
                     );
 
                     if (result.exit && typeof result.exit === "object") {
@@ -158,7 +162,7 @@ function createAdaptedMotionComponent(element) {
                             initial,
                             animate,
                             result.exit,
-                            elementSize.value,
+                            sizeForAdapt,
                         );
                     }
                 }
@@ -212,6 +216,21 @@ function createAdaptedMotionComponent(element) {
 
                 if (slideReady.value === false) {
                     result.animate = { opacity: 0 };
+                }
+
+                // Strip scroll-driven MotionValues from :style (parallax suppression)
+                if (result.style && typeof result.style === "object") {
+                    const filteredStyle = {};
+                    for (const [key, val] of Object.entries(result.style)) {
+                        const isMotionValue =
+                            val !== null &&
+                            typeof val === "object" &&
+                            typeof val.get === "function";
+                        if (!isMotionValue) {
+                            filteredStyle[key] = val;
+                        }
+                    }
+                    result.style = filteredStyle;
                 }
 
                 return result;

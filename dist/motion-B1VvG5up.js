@@ -236,10 +236,13 @@ function M(e) {
 			});
 			let m = r(() => {
 				if (!d.value) return l;
-				let e = { ...l };
-				e.variants && typeof e.variants == "object" && (e.variants = C(e.variants, p.value));
-				let t = e.initial && typeof e.initial == "object" ? e.initial : null, n = e.animate && typeof e.animate == "object" ? e.animate : null;
-				if (t && n && (e.initial = x(t, n, t, p.value), e.animate = x(t, n, n, p.value), e.exit && typeof e.exit == "object" && (e.exit = x(t, n, e.exit, p.value))), e.exit && typeof e.exit == "object" && e.exit.transition) {
+				let e = { ...l }, t = p.value ?? {
+					width: Infinity,
+					height: Infinity
+				};
+				e.variants && typeof e.variants == "object" && (e.variants = C(e.variants, t));
+				let n = e.initial && typeof e.initial == "object" ? e.initial : null, r = e.animate && typeof e.animate == "object" ? e.animate : null;
+				if (n && r && (e.initial = x(n, r, n, t), e.animate = x(n, r, r, t), e.exit && typeof e.exit == "object" && (e.exit = x(n, r, e.exit, t))), e.exit && typeof e.exit == "object" && e.exit.transition) {
 					let t = e.exit.transition, { transition: n, ...r } = e.exit, i = new Set(Object.keys(r));
 					e.exit = {
 						...r,
@@ -247,17 +250,22 @@ function M(e) {
 					};
 				}
 				if (e.transition && typeof e.transition == "object") {
-					let r = new Set([...Object.keys(t || {}), ...Object.keys(n || {})]);
-					e.transition = A(e.transition, r);
+					let t = new Set([...Object.keys(n || {}), ...Object.keys(r || {})]);
+					e.transition = A(e.transition, t);
 				}
-				if (n && n.transition) {
+				if (r && r.transition) {
 					let { transition: t, ...n } = e.animate, r = new Set(Object.keys(n));
 					e.animate = {
 						...n,
 						transition: A(t, r)
 					};
 				}
-				return f.value === !1 && (e.animate = { opacity: 0 }), e;
+				if (f.value === !1 && (e.animate = { opacity: 0 }), e.style && typeof e.style == "object") {
+					let t = {};
+					for (let [n, r] of Object.entries(e.style)) typeof r == "object" && r && typeof r.get == "function" || (t[n] = r);
+					e.style = t;
+				}
+				return e;
 			});
 			return () => o(t[e], m.value, u);
 		}
