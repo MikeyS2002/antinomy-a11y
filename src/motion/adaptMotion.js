@@ -1,18 +1,32 @@
 import { useReducedMotion } from "motion-v";
 import { classifyProperty } from "./classify.js";
 import { isSafeEasing, isUnsafeTransitionType } from "./easing.js";
-import { reducedEasing, thresholds, propertyCategories } from "./config.js";
+import {
+    reducedEasing,
+    thresholds,
+    largeElementThresholds,
+    largeElementBreakpoint,
+    propertyCategories,
+} from "./config.js";
+
+function isLargeElement(elementSize) {
+    if (!elementSize) return false;
+    return (
+        Math.max(elementSize.width, elementSize.height) > largeElementBreakpoint
+    );
+}
 
 /**
  * Adapts a single keyframe object (initial, animate, exit).
  * This is the core logic extracted so it can be reused by both the function API and the component wrapper
  *
- * @param {Record<string, any>} from - The starting state
- * @param {Record<string, any>} to - The ending state
- * @param {Record<string, any>} target - The keyframe to adapt (like from, to, or exit)
+ * @param {Record<string, any>} from
+ * @param {Record<string, any>} to
+ * @param {Record<string, any>} target
+ * @param {{ width: number, height: number } | null} [elementSize]
  * @returns {Record<string, any>}
  */
-export function adaptKeyframe(from, to, target) {
+export function adaptKeyframe(from, to, target, elementSize = null) {
     const adapted = {};
     const allProperties = new Set([
         ...Object.keys(from),
@@ -28,7 +42,12 @@ export function adaptKeyframe(from, to, target) {
 
         const initialValue = from[property] ?? getNeutralValue(property);
         const animateValue = to[property] ?? getNeutralValue(property);
-        const risk = classifyProperty(property, initialValue, animateValue);
+        const risk = classifyProperty(
+            property,
+            initialValue,
+            animateValue,
+            elementSize,
+        );
 
         switch (risk) {
             case "high":
@@ -56,6 +75,7 @@ export function adaptKeyframe(from, to, target) {
                 adapted[property] = clampToThreshold(
                     property,
                     target[property],
+                    elementSize,
                 );
                 break;
             case "low":
@@ -79,20 +99,20 @@ export function adaptKeyframe(from, to, target) {
 /**
  * Adapts animation based on reduced motion preference
  *
- * When reduced motion is on:
- *   - high: neutralized entirely (translation to 0, scale to 1, rotation to 0)
- *   - moderate: clamped to safe threshold boundaries
- *   - low: unchanged
- *   - unknown: passed through with dev mode console warning
- *   - transition: simplified easing, max 200ms duration and spring physics remove
- *
- * @param {Record<string, any>} initial - The starting state
- * @param {Record<string, any>} animate - The end state
- * @param {Record<string, any>} [transition] - Optional transition config
- * @param {Record<string, any>} [exit] - Optional exit state for AnimatePresence
+ * @param {Record<string, any>} initial
+ * @param {Record<string, any>} animate
+ * @param {Record<string, any>} [transition]
+ * @param {Record<string, any>} [exit]
+ * @param {{ width: number, height: number } | null} [elementSize]
  * @returns {{ initial: Record<string, any>, animate: Record<string, any>, transition: Record<string, any> }}
  */
-export function adaptMotion(initial, animate, transition = {}, exit = null) {
+export function adaptMotion(
+    initial,
+    animate,
+    transition = {},
+    exit = null,
+    elementSize = null,
+) {
     const reducedMotion = useReducedMotion();
 
     if (!reducedMotion.value) {
@@ -107,8 +127,18 @@ export function adaptMotion(initial, animate, transition = {}, exit = null) {
         ...(exit ? Object.keys(exit) : []),
     ]);
 
-    const adaptedInitial = adaptKeyframe(initial, animate, initial);
-    const adaptedAnimate = adaptKeyframe(initial, animate, animate);
+    const adaptedInitial = adaptKeyframe(
+        initial,
+        animate,
+        initial,
+        elementSize,
+    );
+    const adaptedAnimate = adaptKeyframe(
+        initial,
+        animate,
+        animate,
+        elementSize,
+    );
     // Build per property transitions
     const adaptedTransition = buildReducedTransition(transition, allProperties);
 
@@ -119,7 +149,7 @@ export function adaptMotion(initial, animate, transition = {}, exit = null) {
     };
 
     if (exit) {
-        result.exit = adaptKeyframe(initial, animate, exit);
+        result.exit = adaptKeyframe(initial, animate, exit, elementSize);
     }
 
     return result;
@@ -128,16 +158,17 @@ export function adaptMotion(initial, animate, transition = {}, exit = null) {
 /**
  * Adapts a full variants object. Each variant's keyframe values are adapted using the initial -> animate pair for risk classification
  *
- * @param {Record<string, Record<string, any>>} variants - example { initial: { y: '120%' }, animate: { y: 0 }, exit: { y: '120%' } }
+ * @param {Record<string, Record<string, any>>} variants
+ * @param {{ width: number, height: number } | null} [elementSize]
  * @returns {Record<string, Record<string, any>>}
  */
-export function adaptVariants(variants) {
+export function adaptVariants(variants, elementSize = null) {
     const initial = variants.initial || {};
     const animate = variants.animate || {};
 
     const adapted = {};
     for (const [key, keyframe] of Object.entries(variants)) {
-        adapted[key] = adaptKeyframe(initial, animate, keyframe);
+        adapted[key] = adaptKeyframe(initial, animate, keyframe, elementSize);
     }
     return adapted;
 }
@@ -145,44 +176,32 @@ export function adaptVariants(variants) {
 // Internal helpers
 
 // Clamps a value to the safe threshold
-function clampToThreshold(property, value) {
+function clampToThreshold(property, value, elementSize = null) {
     const category = propertyCategories[property];
     const numValue = typeof value === "string" ? parseFloat(value) : value;
 
-    // Non-numeric values (clipPath strings like "inset(0% 100% 0% 0%)")
     // can't be clamped, return unchanged
     if (isNaN(numValue)) return value;
 
+    const t = isLargeElement(elementSize) ? largeElementThresholds : thresholds;
+
     if (category === "spatial") {
         // Clamp translation
-        return Math.max(
-            -thresholds.translation,
-            Math.min(thresholds.translation, numValue),
-        );
+        return Math.max(-t.translation, Math.min(t.translation, numValue));
     }
     if (category === "scale") {
         // Clamp scale
-        return Math.max(
-            1 - thresholds.scale,
-            Math.min(1 + thresholds.scale, numValue),
-        );
+        return Math.max(1 - t.scale, Math.min(1 + t.scale, numValue));
     }
     if (category === "rotation") {
         // Clamp rotation
-        return Math.max(
-            -thresholds.rotation,
-            Math.min(thresholds.rotation, numValue),
-        );
+        return Math.max(-t.rotation, Math.min(t.rotation, numValue));
     }
     return value;
 }
 
 /**
- * Builds reduced transitions:
- * - safe easing preserved unsafe easing replaced
- * - spring types removed
- * - opacity gets ease-out
- * - duration and delay from the original transition
+ * Builds reduced transitions
  */
 function buildReducedTransition(originalTransition, properties) {
     const base = { ...originalTransition };
@@ -219,7 +238,6 @@ function buildReducedTransition(originalTransition, properties) {
 }
 
 // Returns true when a value is a percentage string whose absolute value is >= 100%
-// fully off-screen for example 100%, -100%, 120%, -150%
 function isOffScreenPercent(value) {
     if (typeof value !== "string") return false;
     const n = parseFloat(value);

@@ -74,7 +74,6 @@ function willBecomeAFade(initial, animate) {
 
 /**
  * Creates a a11y adapted motion component for an HTML element
- * It intercepts motion props (initial, animate, exit, transition, variants)
  * Runs them through the risk check
  */
 function createAdaptedMotionComponent(element) {
@@ -85,16 +84,22 @@ function createAdaptedMotionComponent(element) {
             const reducedMotion = useReducedMotion();
 
             // When a slide is replaced with a fade inside a plain <AnimatePresence>,
-            // hold the entering element at opacity:0 until the exiting sibling is done.
-            // null = no hold needed, false = holding, true = released (animate immediately)
+            // hold the entering element at opacity:0 until the exiting sibling is done
             const slideReady = ref(null);
 
+            // Measured element size — populated on mount and used to pick size-appropriate thresholds
+            const elementSize = ref(null);
+
             onMounted(() => {
+                const el = getCurrentInstance()?.proxy?.$el;
+                if (el?.getBoundingClientRect) {
+                    const { width, height } = el.getBoundingClientRect();
+                    elementSize.value = { width, height };
+                }
+
                 if (!reducedMotion.value) return;
                 if (!willBecomeAFade(attrs.initial, attrs.animate)) return;
 
-                // motion-v stamps every presence-managed element with data-ap="<presenceId>"
-                const el = getCurrentInstance()?.proxy?.$el;
                 const presenceId = el?.getAttribute?.("data-ap");
                 if (!presenceId) return;
 
@@ -118,12 +123,13 @@ function createAdaptedMotionComponent(element) {
 
                 const result = { ...attrs };
 
-                // example :variants="{ initial: { y: '120%' }, animate: { y: 0 }, exit: { y: '120%' } }"
                 if (result.variants && typeof result.variants === "object") {
-                    result.variants = adaptVariants(result.variants);
+                    result.variants = adaptVariants(
+                        result.variants,
+                        elementSize.value,
+                    );
                 }
 
-                // --- Handle inline :initial / :animate / :exit ---
                 const initial =
                     result.initial && typeof result.initial === "object"
                         ? result.initial
@@ -134,14 +140,25 @@ function createAdaptedMotionComponent(element) {
                         : null;
 
                 if (initial && animate) {
-                    result.initial = adaptKeyframe(initial, animate, initial);
-                    result.animate = adaptKeyframe(initial, animate, animate);
+                    result.initial = adaptKeyframe(
+                        initial,
+                        animate,
+                        initial,
+                        elementSize.value,
+                    );
+                    result.animate = adaptKeyframe(
+                        initial,
+                        animate,
+                        animate,
+                        elementSize.value,
+                    );
 
                     if (result.exit && typeof result.exit === "object") {
                         result.exit = adaptKeyframe(
                             initial,
                             animate,
                             result.exit,
+                            elementSize.value,
                         );
                     }
                 }
@@ -193,9 +210,6 @@ function createAdaptedMotionComponent(element) {
                     };
                 }
 
-                // Hold the entering element at opacity:0 while an exiting sibling is
-                // still playing its fade. When slideReady flips back to null, the
-                // computed re-runs and motion-v picks up the { opacity: 1 } change.
                 if (slideReady.value === false) {
                     result.animate = { opacity: 0 };
                 }
@@ -212,8 +226,8 @@ function createAdaptedMotionComponent(element) {
 const componentCache = {};
 
 /**
- * AnimatePresence wrapper that enforces mode="wait" when reduced motion is on,
- * so exit animations (fades) always complete before entering animations start.
+ * AnimatePresence wrapper that enforces mode="wait" when reduced motion is on
+ * Exit animations always complete before entering animations start
  */
 const AdaptedAnimatePresence = defineComponent({
     name: "AdaptedAnimatePresence",
@@ -229,10 +243,6 @@ const AdaptedAnimatePresence = defineComponent({
 
 /**
  * Proxy that creates accessibility adapted motion components on demand.
- *
- * Usage: adaptedMotion.div, adaptedMotion.span, adaptedMotion.button, etc.
- * Use adaptedMotion.AnimatePresence in place of AnimatePresence — it automatically
- * applies mode="wait" when reduced motion is on so exit fades finish before enters.
  */
 export const adaptedMotion = new Proxy(
     { AnimatePresence: AdaptedAnimatePresence },

@@ -1,20 +1,37 @@
-import { thresholds, propertyCategories } from "./config.js";
+import {
+    thresholds,
+    largeElementThresholds,
+    largeElementBreakpoint,
+    propertyCategories,
+} from "./config.js";
+
+/**
+ * Returns true if the element should use the stricter large-element thresholds
+ *
+ * @param {{ width: number, height: number } | null} elementSize
+ */
+function isLargeElement(elementSize) {
+    if (!elementSize) return false;
+    return (
+        Math.max(elementSize.width, elementSize.height) > largeElementBreakpoint
+    );
+}
 
 /**
  * Classifies the risk of animating a property based on the distance between its initial and animate values
  *
- * Risk levels:
- * - high: animation exceeds safe thresholds, should be neutralized
- * - moderate: animation is within threshold range
- * - low: safe property
- * - unknown: unrecognized property, gives warning
- *
- * @param {string} property - The animation name (x, opacity, ect.)
- * @param {number|string} initialValue - The starting value
- * @param {number|string} animateValue - The ending value
+ * @param {string} property
+ * @param {number|string} initialValue
+ * @param {number|string} animateValue
+ * @param {{ width: number, height: number } | null} [elementSize]
  * @returns {'high' | 'moderate' | 'low' | 'unknown'}
  */
-export function classifyProperty(property, initialValue, animateValue) {
+export function classifyProperty(
+    property,
+    initialValue,
+    animateValue,
+    elementSize = null,
+) {
     const category = propertyCategories[property];
 
     // Unknown property
@@ -46,20 +63,23 @@ export function classifyProperty(property, initialValue, animateValue) {
         distance = Math.abs(numInitial - numAnimate);
     }
 
+    // Large elements use stricter thresholds — even small motion covers a lot of screen area
+    const t = isLargeElement(elementSize) ? largeElementThresholds : thresholds;
+
     // Compare distance against thresholds
     // Classify spatial properties against translation threshold
     if (category === "spatial") {
-        return distance > thresholds.translation ? "high" : "moderate";
+        return distance > t.translation ? "high" : "moderate";
     }
 
     // Classify scale properties against scale threshold
     if (category === "scale") {
-        return distance > thresholds.scale ? "high" : "moderate";
+        return distance > t.scale ? "high" : "moderate";
     }
 
     // Classify rotation properties against rotation threshold
     if (category === "rotation") {
-        return distance > thresholds.rotation ? "high" : "moderate";
+        return distance > t.rotation ? "high" : "moderate";
     }
 
     return "unknown";

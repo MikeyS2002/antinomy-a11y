@@ -1,12 +1,25 @@
 /**
- * Default thresholds - can be overridden via configureMotion()
- * Values under this thresholds are considered moderate (safe enough to keep with clamping)
- * Values above these are considered high risk (should be neutralized)
+ * Values under this thresholds are considered moderate
+ * Values above these are considered high risk
  */
 export let thresholds = {
-    translation: 50, // pixels x/y movement beyond 50px is high risk
-    scale: 0.15, // scale beyond 0.15 is high risk
-    rotation: 10, // rotation beyond 10 is too high risk
+    translation: 50,
+    scale: 0.15,
+    rotation: 10,
+};
+
+/**
+ * Element size threshold in pixels.
+ */
+export let largeElementBreakpoint = 400;
+
+/**
+ * Stricter thresholds applied when the animated element is large (> largeElementBreakpoint)
+ */
+export let largeElementThresholds = {
+    translation: 20,
+    scale: 0,
+    rotation: 0,
 };
 
 /**
@@ -47,12 +60,23 @@ export const propertyCategories = {
  * Call once
  *
  * @param {object} config
- * @param {object} [config.thresholds] NEW - Override risk thresholds
- * @param {object} [config.reducedEasing] NEW - Override easing functions
+ * @param {object} [config.thresholds] - Override risk thresholds for normal-sized elements
+ * @param {object} [config.largeElementThresholds] - Override risk thresholds for large elements
+ * @param {number} [config.largeElementBreakpoint] - Override the px size at which an element is considered large
+ * @param {object} [config.reducedEasing] - Override easing functions
  */
 export function configureMotion(config = {}) {
     if (config.thresholds) {
         thresholds = { ...thresholds, ...config.thresholds };
+    }
+    if (config.largeElementThresholds) {
+        largeElementThresholds = {
+            ...largeElementThresholds,
+            ...config.largeElementThresholds,
+        };
+    }
+    if (config.largeElementBreakpoint !== undefined) {
+        largeElementBreakpoint = config.largeElementBreakpoint;
     }
     if (config.reducedEasing) {
         reducedEasing = { ...reducedEasing, ...config.reducedEasing };
