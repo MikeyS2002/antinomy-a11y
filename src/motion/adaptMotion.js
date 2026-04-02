@@ -174,10 +174,10 @@ export function adaptVariants(variants, elementSize = null) {
     return adapted;
 }
 
-// Internal helpers
+// Helpers
 
 // Clamps a value to the safe threshold
-function clampToThreshold(property, value, elementSize = null) {
+export function clampToThreshold(property, value, elementSize = null) {
     const category = propertyCategories[property];
     const numValue = typeof value === "string" ? parseFloat(value) : value;
 
@@ -204,7 +204,7 @@ function clampToThreshold(property, value, elementSize = null) {
 /**
  * Builds reduced transitions
  */
-function buildReducedTransition(originalTransition, properties) {
+export function buildReducedTransition(originalTransition, properties) {
     const base = { ...originalTransition };
 
     // Remove spring physics
@@ -244,14 +244,14 @@ function buildReducedTransition(originalTransition, properties) {
 }
 
 // Returns true when a value is a percentage string whose absolute value is >= 100%
-function isOffScreenPercent(value) {
+export function isOffScreenPercent(value) {
     if (typeof value !== "string") return false;
     const n = parseFloat(value);
     return !isNaN(n) && Math.abs(n) >= 100 && value.trim().endsWith("%");
 }
 
 // Returns true when the property and values represent an appear/disappear
-function isAppearPattern(property, fromVal, toVal) {
+export function isAppearPattern(property, fromVal, toVal) {
     const category = propertyCategories[property];
     if (category === "spatial") {
         return isOffScreenPercent(fromVal) || isOffScreenPercent(toVal);
@@ -262,7 +262,7 @@ function isAppearPattern(property, fromVal, toVal) {
     return false;
 }
 
-function isInvisibleSide(property, value) {
+export function isInvisibleSide(property, value) {
     const category = propertyCategories[property];
     if (category === "spatial") return isOffScreenPercent(value);
     if (category === "scale") return value === 0;
@@ -270,7 +270,7 @@ function isInvisibleSide(property, value) {
 }
 
 // returns the neutral (no movement) for its property
-function getNeutralValue(property) {
+export function getNeutralValue(property) {
     switch (property) {
         case "x":
         case "y":

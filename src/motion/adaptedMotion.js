@@ -7,48 +7,12 @@ import {
     getCurrentInstance,
 } from "vue";
 import { motion, AnimatePresence, useReducedMotion } from "motion-v";
-import { adaptKeyframe, adaptVariants } from "./adaptMotion.js";
-import { reducedEasing, maxDuration, propertyCategories } from "./config.js";
-import { isSafeEasing, isUnsafeTransitionType } from "./easing.js";
-
-/**
- * Builds a reduced transition for the component wrapper
- */
-function buildReducedTransition(originalTransition, properties) {
-    const base = { ...originalTransition };
-
-    if (isUnsafeTransitionType(originalTransition.type)) {
-        base.type = undefined;
-        base.stiffness = undefined;
-        base.damping = undefined;
-        base.bounce = undefined;
-        base.mass = undefined;
-        base.velocity = undefined;
-    }
-
-    const hasSpatial = [...properties].some((p) => {
-        const cat = propertyCategories[p];
-        return cat === "spatial" || cat === "scale" || cat === "rotation";
-    });
-    const hasOpacity = properties.has("opacity");
-
-    const spatialEasing = isSafeEasing(originalTransition.ease)
-        ? originalTransition.ease
-        : reducedEasing.spatial;
-
-    if (hasOpacity && !hasSpatial) {
-        base.ease = reducedEasing.opacity;
-    } else {
-        base.ease = spatialEasing;
-    }
-
-    // Cap duration so residual animations stay brief
-    if (base.duration !== undefined && base.duration > maxDuration) {
-        base.duration = maxDuration;
-    }
-
-    return base;
-}
+import {
+    adaptKeyframe,
+    adaptVariants,
+    buildReducedTransition,
+} from "./adaptMotion.js";
+import { propertyCategories } from "./config.js";
 
 /**
  * Returns true if initial or animate contains a ±100% slide on a spatial property.
