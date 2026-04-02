@@ -1,2 +1,2 @@
-import { a as e, c as t, d as n, i as r, l as i, n as a, o, r as s, s as c, t as l, u } from "./motion-B1VvG5up.js";
-export { a as adaptKeyframe, s as adaptMotion, r as adaptVariants, l as adaptedMotion, c as classifyProperty, t as configureMotion, e as isSafeEasing, o as isUnsafeTransitionType, i as propertyCategories, u as reducedEasing, n as thresholds };
+import { a as e, c as t, d as n, f as r, i, l as a, n as o, o as s, r as c, s as l, t as u, u as d } from "./motion-DFCvcnuy.js";
+export { o as adaptKeyframe, c as adaptMotion, i as adaptVariants, u as adaptedMotion, l as classifyProperty, t as configureMotion, e as isSafeEasing, s as isUnsafeTransitionType, a as maxDuration, d as propertyCategories, n as reducedEasing, r as thresholds };

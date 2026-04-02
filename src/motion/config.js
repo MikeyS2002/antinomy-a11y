@@ -14,7 +14,7 @@ export let thresholds = {
 export let largeElementBreakpoint = 400;
 
 /**
- * Stricter thresholds applied when the animated element is large (> largeElementBreakpoint)
+ * Stricter thresholds applied when the animated element is large
  */
 export let largeElementThresholds = {
     translation: 20,
@@ -23,9 +23,14 @@ export let largeElementThresholds = {
 };
 
 /**
+ * Maximum duration (in seconds) for any transition when reduced motion is ON
+ */
+export let maxDuration = 0.3;
+
+/**
  * Easing functions used in reduced motion mode
- * Spatial get linear (no acceleration is less disorienting)
- * Opacity gets ease-out (feels more natural for fades)
+ * Spatial get linear
+ * Opacity gets ease-out
  */
 export let reducedEasing = {
     spatial: "linear",
@@ -34,10 +39,6 @@ export let reducedEasing = {
 
 /**
  * Maps properties to their risk category
- * - spatial: translation movement (x, y), can trigger vestibular responses
- * - scale: size changes can be disorienting at large values
- * - rotation: rotational movement can be disorienting at large values
- * - safe: properties that do not cause vestibular issues
  */
 export const propertyCategories = {
     x: "spatial",
@@ -60,10 +61,10 @@ export const propertyCategories = {
  * Call once
  *
  * @param {object} config
- * @param {object} [config.thresholds] - Override risk thresholds for normal-sized elements
- * @param {object} [config.largeElementThresholds] - Override risk thresholds for large elements
- * @param {number} [config.largeElementBreakpoint] - Override the px size at which an element is considered large
- * @param {object} [config.reducedEasing] - Override easing functions
+ * @param {object} [config.thresholds]
+ * @param {object} [config.largeElementThresholds]
+ * @param {number} [config.largeElementBreakpoint]
+ * @param {object} [config.reducedEasing]
  */
 export function configureMotion(config = {}) {
     if (config.thresholds) {
@@ -77,6 +78,9 @@ export function configureMotion(config = {}) {
     }
     if (config.largeElementBreakpoint !== undefined) {
         largeElementBreakpoint = config.largeElementBreakpoint;
+    }
+    if (config.maxDuration !== undefined) {
+        maxDuration = config.maxDuration;
     }
     if (config.reducedEasing) {
         reducedEasing = { ...reducedEasing, ...config.reducedEasing };

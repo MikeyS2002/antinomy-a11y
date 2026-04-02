@@ -8,7 +8,7 @@ import {
 } from "vue";
 import { motion, AnimatePresence, useReducedMotion } from "motion-v";
 import { adaptKeyframe, adaptVariants } from "./adaptMotion.js";
-import { reducedEasing, propertyCategories } from "./config.js";
+import { reducedEasing, maxDuration, propertyCategories } from "./config.js";
 import { isSafeEasing, isUnsafeTransitionType } from "./easing.js";
 
 /**
@@ -40,6 +40,11 @@ function buildReducedTransition(originalTransition, properties) {
         base.ease = reducedEasing.opacity;
     } else {
         base.ease = spatialEasing;
+    }
+
+    // Cap duration so residual animations stay brief
+    if (base.duration !== undefined && base.duration > maxDuration) {
+        base.duration = maxDuration;
     }
 
     return base;

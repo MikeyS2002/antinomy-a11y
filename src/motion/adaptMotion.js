@@ -3,6 +3,7 @@ import { classifyProperty } from "./classify.js";
 import { isSafeEasing, isUnsafeTransitionType } from "./easing.js";
 import {
     reducedEasing,
+    maxDuration,
     thresholds,
     largeElementThresholds,
     largeElementBreakpoint,
@@ -232,6 +233,11 @@ function buildReducedTransition(originalTransition, properties) {
         base.ease = reducedEasing.opacity;
     } else {
         base.ease = spatialEasing;
+    }
+
+    // Cap duration so residual animations stay brief
+    if (base.duration !== undefined && base.duration > maxDuration) {
+        base.duration = maxDuration;
     }
 
     return base;
