@@ -23,7 +23,7 @@ export let largeElementThresholds = {
 };
 
 /**
- * Maximum duration (in seconds) for any transition when reduced motion is ON
+ * Max duration (seconds) for transitions in reduced motion
  */
 export let maxDuration = 0.3;
 

@@ -72,6 +72,9 @@ function createAdaptedMotionComponent(element) {
                 const presenceId = el?.getAttribute?.("data-ap");
                 if (!presenceId) return;
 
+                // ssr guard
+                if (typeof document === "undefined") return;
+
                 // More than one element sharing this presenceId means there's an exiting sibling
                 if (
                     document.querySelectorAll(`[data-ap="${presenceId}"]`)

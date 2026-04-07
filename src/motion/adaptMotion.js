@@ -235,7 +235,7 @@ export function buildReducedTransition(originalTransition, properties) {
         base.ease = spatialEasing;
     }
 
-    // Cap duration so residual animations stay brief
+    // cap duration
     if (base.duration !== undefined && base.duration > maxDuration) {
         base.duration = maxDuration;
     }

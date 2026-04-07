@@ -5,8 +5,9 @@ export default defineConfig({
     build: {
         lib: {
             entry: {
-                index: resolve(__dirname, "src/motion/index.js"),
+                index: resolve(__dirname, "src/index.js"),
                 "motion/index": resolve(__dirname, "src/motion/index.js"),
+                "visual/index": resolve(__dirname, "src/visual/index.js"),
             },
             formats: ["es"],
             fileName: (format, entryName) => `${entryName}.js`,

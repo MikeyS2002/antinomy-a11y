@@ -180,15 +180,6 @@ function A(e) {
 //#endregion
 //#region src/motion/adaptedMotion.js
 function j(e, t) {
-	let n = { ...e };
-	b(e.type) && (n.type = void 0, n.stiffness = void 0, n.damping = void 0, n.bounce = void 0, n.mass = void 0, n.velocity = void 0);
-	let r = [...t].some((e) => {
-		let t = m[e];
-		return t === "spatial" || t === "scale" || t === "rotation";
-	}), i = t.has("opacity"), a = y(e.ease) ? e.ease : p.spatial;
-	return i && !r ? n.ease = p.opacity : n.ease = a, n.duration !== void 0 && n.duration > f && (n.duration = f), n;
-}
-function M(e, t) {
 	if (!e || !t) return !1;
 	for (let n of [
 		"x",
@@ -210,7 +201,7 @@ function M(e, t) {
 	]) if (e[n] === 0 || t[n] === 0) return !0;
 	return !1;
 }
-function N(e) {
+function M(e) {
 	return i({
 		name: `adaptedMotion.${e}`,
 		inheritAttrs: !1,
@@ -225,9 +216,9 @@ function N(e) {
 						height: n
 					};
 				}
-				if (!d.value || !M(l.initial, l.animate)) return;
+				if (!d.value || !j(l.initial, l.animate)) return;
 				let t = e?.getAttribute?.("data-ap");
-				if (!t || document.querySelectorAll(`[data-ap="${t}"]`).length <= 1) return;
+				if (!t || typeof document > "u" || document.querySelectorAll(`[data-ap="${t}"]`).length <= 1) return;
 				f.value = !1;
 				let n = (l.transition?.duration ?? .3) * 1e3;
 				setTimeout(() => {
@@ -246,18 +237,18 @@ function N(e) {
 					let t = e.exit.transition, { transition: n, ...r } = e.exit, i = new Set(Object.keys(r));
 					e.exit = {
 						...r,
-						transition: j(t, i)
+						transition: E(t, i)
 					};
 				}
 				if (e.transition && typeof e.transition == "object") {
 					let t = new Set([...Object.keys(n || {}), ...Object.keys(r || {})]);
-					e.transition = j(e.transition, t);
+					e.transition = E(e.transition, t);
 				}
 				if (r && r.transition) {
 					let { transition: t, ...n } = e.animate, r = new Set(Object.keys(n));
 					e.animate = {
 						...n,
-						transition: j(t, r)
+						transition: E(t, r)
 					};
 				}
 				if (f.value === !1 && (e.animate = { opacity: 0 }), e.style && typeof e.style == "object") {
@@ -271,7 +262,7 @@ function N(e) {
 		}
 	});
 }
-var P = {}, F = i({
+var N = {}, P = i({
 	name: "AdaptedAnimatePresence",
 	setup(t, { attrs: i, slots: a }) {
 		let s = n(), c = r(() => s.value ? {
@@ -280,8 +271,8 @@ var P = {}, F = i({
 		} : i);
 		return () => o(e, c.value, a);
 	}
-}), I = new Proxy({ AnimatePresence: F }, { get(e, t) {
-	return t in e ? e[t] : (P[t] || (P[t] = N(t)), P[t]);
+}), F = new Proxy({ AnimatePresence: P }, { get(e, t) {
+	return t in e ? e[t] : (N[t] || (N[t] = M(t)), N[t]);
 } });
 //#endregion
-export { y as a, h as c, p as d, l as f, w as i, f as l, S as n, b as o, C as r, _ as s, I as t, m as u };
+export { p as _, E as a, O as c, y as d, b as f, m as g, f as h, w as i, k as l, h as m, S as n, T as o, _ as p, C as r, A as s, F as t, D as u, l as v };
