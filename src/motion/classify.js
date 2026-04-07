@@ -17,12 +17,29 @@ function isLargeElement(elementSize) {
     );
 }
 
+// compares a distance value against the threshold for a given category
+function classifyDistance(category, distance, elementSize) {
+    const t = isLargeElement(elementSize) ? largeElementThresholds : thresholds;
+
+    if (category === "spatial") {
+        return distance > t.translation ? "high" : "moderate";
+    }
+    if (category === "scale") {
+        return distance > t.scale ? "high" : "moderate";
+    }
+    if (category === "rotation") {
+        return distance > t.rotation ? "high" : "moderate";
+    }
+
+    return "unknown";
+}
+
 /**
  * Classifies the risk of animating a property based on the distance between its initial and animate values
  *
  * @param {string} property
- * @param {number|string} initialValue
- * @param {number|string} animateValue
+ * @param {number|string|Array} initialValue
+ * @param {number|string|Array} animateValue
  * @param {{ width: number, height: number } | null} [elementSize]
  * @returns {'high' | 'moderate' | 'low' | 'unknown'}
  */
@@ -39,6 +56,34 @@ export function classifyProperty(
 
     // Safe properties always pass through
     if (category === "safe") return "low";
+
+    // keyframe arrays like x: [0, 100, 50] — merge into one sequence
+    // and classify based on the largest step between consecutive values
+    if (Array.isArray(initialValue) || Array.isArray(animateValue)) {
+        const allValues = [
+            ...(Array.isArray(initialValue) ? initialValue : [initialValue]),
+            ...(Array.isArray(animateValue) ? animateValue : [animateValue]),
+        ];
+        const nums = allValues.map((v) =>
+            typeof v === "string" ? parseFloat(v) : v,
+        );
+        if (nums.some(isNaN)) return "unknown";
+
+        let distance = 0;
+        if (category === "scale") {
+            // for scale arrays check max deviation from 1
+            for (const n of nums) {
+                distance = Math.max(distance, Math.abs(n - 1));
+            }
+        } else {
+            // max step between consecutive values
+            for (let i = 1; i < nums.length; i++) {
+                distance = Math.max(distance, Math.abs(nums[i] - nums[i - 1]));
+            }
+        }
+
+        return classifyDistance(category, distance, elementSize);
+    }
 
     // Parse numeric values
     const numInitial =
@@ -63,24 +108,5 @@ export function classifyProperty(
         distance = Math.abs(numInitial - numAnimate);
     }
 
-    // Large elements use stricter thresholds — even small motion covers a lot of screen area
-    const t = isLargeElement(elementSize) ? largeElementThresholds : thresholds;
-
-    // Compare distance against thresholds
-    // Classify spatial properties against translation threshold
-    if (category === "spatial") {
-        return distance > t.translation ? "high" : "moderate";
-    }
-
-    // Classify scale properties against scale threshold
-    if (category === "scale") {
-        return distance > t.scale ? "high" : "moderate";
-    }
-
-    // Classify rotation properties against rotation threshold
-    if (category === "rotation") {
-        return distance > t.rotation ? "high" : "moderate";
-    }
-
-    return "unknown";
+    return classifyDistance(category, distance, elementSize);
 }

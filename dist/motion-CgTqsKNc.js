@@ -20,15 +20,22 @@ var l = {
 }, m = {
 	x: "spatial",
 	y: "spatial",
+	z: "spatial",
 	translateX: "spatial",
 	translateY: "spatial",
+	translateZ: "spatial",
+	perspective: "spatial",
 	scale: "scale",
 	scaleX: "scale",
 	scaleY: "scale",
+	scaleZ: "scale",
 	rotate: "rotation",
 	rotateX: "rotation",
 	rotateY: "rotation",
 	rotateZ: "rotation",
+	skew: "rotation",
+	skewX: "rotation",
+	skewY: "rotation",
 	opacity: "safe",
 	clipPath: "safe"
 };
@@ -49,55 +56,65 @@ function h(e = {}) {
 function g(e) {
 	return e ? Math.max(e.width, e.height) > u : !1;
 }
-function _(e, t, n, r = null) {
+function _(e, t, n) {
+	let r = g(n) ? d : l;
+	return e === "spatial" ? t > r.translation ? "high" : "moderate" : e === "scale" ? t > r.scale ? "high" : "moderate" : e === "rotation" ? t > r.rotation ? "high" : "moderate" : "unknown";
+}
+function v(e, t, n, r = null) {
 	let i = m[e];
 	if (!i) return "unknown";
 	if (i === "safe") return "low";
+	if (Array.isArray(t) || Array.isArray(n)) {
+		let e = [...Array.isArray(t) ? t : [t], ...Array.isArray(n) ? n : [n]].map((e) => typeof e == "string" ? parseFloat(e) : e);
+		if (e.some(isNaN)) return "unknown";
+		let a = 0;
+		if (i === "scale") for (let t of e) a = Math.max(a, Math.abs(t - 1));
+		else for (let t = 1; t < e.length; t++) a = Math.max(a, Math.abs(e[t] - e[t - 1]));
+		return _(i, a, r);
+	}
 	let a = typeof t == "string" ? parseFloat(t) : t, o = typeof n == "string" ? parseFloat(n) : n;
 	if (isNaN(a) || isNaN(o)) return "unknown";
 	let s;
-	s = i === "scale" ? Math.max(Math.abs(a - 1), Math.abs(o - 1)) : Math.abs(a - o);
-	let c = g(r) ? d : l;
-	return i === "spatial" ? s > c.translation ? "high" : "moderate" : i === "scale" ? s > c.scale ? "high" : "moderate" : i === "rotation" ? s > c.rotation ? "high" : "moderate" : "unknown";
+	return s = i === "scale" ? Math.max(Math.abs(a - 1), Math.abs(o - 1)) : Math.abs(a - o), _(i, s, r);
 }
 //#endregion
 //#region src/motion/easing.js
-var v = [
+var y = [
 	"linear",
 	"ease",
 	"ease-in",
 	"ease-out",
 	"ease-in-out"
 ];
-function y(e) {
+function b(e) {
 	if (!e) return !0;
-	if (typeof e == "string") return v.includes(e);
+	if (typeof e == "string") return y.includes(e);
 	if (Array.isArray(e) && e.length === 4) {
 		let [, t, , n] = e;
 		return t >= 0 && t <= 1 && n >= 0 && n <= 1;
 	}
 	return !1;
 }
-function b(e) {
+function x(e) {
 	return e ? ["spring", "inertia"].includes(e) : !1;
 }
 //#endregion
 //#region src/motion/adaptMotion.js
-function x(e) {
+function S(e) {
 	return e ? Math.max(e.width, e.height) > u : !1;
 }
-function S(e, t, n, r = null) {
+function C(e, t, n, r = null) {
 	let i = {}, a = new Set([
 		...Object.keys(e),
 		...Object.keys(t),
 		...Object.keys(n)
 	]), o = !1;
-	for (let s of a) if (s in n) switch (_(s, e[s] ?? A(s), t[s] ?? A(s), r)) {
+	for (let s of a) if (s in n) switch (v(s, e[s] ?? j(s), t[s] ?? j(s), r)) {
 		case "high":
-			!o && !("opacity" in n) && O(s, e[s], t[s]) ? (i.opacity = k(s, n[s]) ? 0 : 1, o = !0) : i[s] = A(s);
+			!o && !("opacity" in n) && k(s, e[s], t[s]) ? (i.opacity = A(s, n[s]) ? 0 : 1, o = !0) : Array.isArray(n[s]) ? i[s] = n[s].map(() => j(s)) : i[s] = j(s);
 			break;
 		case "moderate":
-			i[s] = T(s, n[s], r);
+			Array.isArray(n[s]) ? i[s] = n[s].map((e) => E(s, e, r)) : i[s] = E(s, n[s], r);
 			break;
 		case "low":
 			i[s] = n[s];
@@ -108,7 +125,7 @@ function S(e, t, n, r = null) {
 	}
 	return i;
 }
-function C(e, t, r = {}, i = null, a = null) {
+function w(e, t, r = {}, i = null, a = null) {
 	if (!n().value) {
 		let n = {
 			initial: e,
@@ -122,64 +139,71 @@ function C(e, t, r = {}, i = null, a = null) {
 		...Object.keys(t),
 		...i ? Object.keys(i) : []
 	]), s = {
-		initial: S(e, t, e, a),
-		animate: S(e, t, t, a),
-		transition: E(r, o)
+		initial: C(e, t, e, a),
+		animate: C(e, t, t, a),
+		transition: D(r, o)
 	};
-	return i && (s.exit = S(e, t, i, a)), s;
+	return i && (s.exit = C(e, t, i, a)), s;
 }
-function w(e, t = null) {
+function T(e, t = null) {
 	let n = e.initial || {}, r = e.animate || {}, i = {};
-	for (let [a, o] of Object.entries(e)) i[a] = S(n, r, o, t);
+	for (let [a, o] of Object.entries(e)) i[a] = C(n, r, o, t);
 	return i;
 }
-function T(e, t, n = null) {
+function E(e, t, n = null) {
 	let r = m[e], i = typeof t == "string" ? parseFloat(t) : t;
 	if (isNaN(i)) return t;
-	let a = x(n) ? d : l;
+	let a = S(n) ? d : l;
 	return r === "spatial" ? Math.max(-a.translation, Math.min(a.translation, i)) : r === "scale" ? Math.max(1 - a.scale, Math.min(1 + a.scale, i)) : r === "rotation" ? Math.max(-a.rotation, Math.min(a.rotation, i)) : t;
 }
-function E(e, t) {
+function D(e, t) {
 	let n = { ...e };
-	b(e.type) && (n.type = void 0, n.stiffness = void 0, n.damping = void 0, n.bounce = void 0, n.mass = void 0, n.velocity = void 0);
+	x(e.type) && (n.type = void 0, n.stiffness = void 0, n.damping = void 0, n.bounce = void 0, n.mass = void 0, n.velocity = void 0), n.repeat = 0, n.repeatType = void 0, n.repeatDelay = void 0;
 	let r = [...t].some((e) => {
 		let t = m[e];
 		return t === "spatial" || t === "scale" || t === "rotation";
-	}), i = t.has("opacity"), a = y(e.ease) ? e.ease : p.spatial;
+	}), i = t.has("opacity"), a = b(e.ease) ? e.ease : p.spatial;
 	return i && !r ? n.ease = p.opacity : n.ease = a, n.duration !== void 0 && n.duration > f && (n.duration = f), n;
 }
-function D(e) {
+function O(e) {
 	if (typeof e != "string") return !1;
 	let t = parseFloat(e);
 	return !isNaN(t) && Math.abs(t) >= 100 && e.trim().endsWith("%");
 }
-function O(e, t, n) {
+function k(e, t, n) {
 	let r = m[e];
-	return r === "spatial" ? D(t) || D(n) : r === "scale" ? t === 0 || n === 0 : !1;
+	return r === "spatial" ? O(t) || O(n) : r === "scale" ? t === 0 || n === 0 : !1;
 }
-function k(e, t) {
+function A(e, t) {
 	let n = m[e];
-	return n === "spatial" ? D(t) : n === "scale" ? t === 0 : !1;
+	return n === "spatial" ? O(t) : n === "scale" ? t === 0 : !1;
 }
-function A(e) {
+function j(e) {
 	switch (e) {
 		case "x":
 		case "y":
+		case "z":
 		case "translateX":
 		case "translateY":
+		case "translateZ":
+		case "perspective":
 		case "rotate":
 		case "rotateX":
 		case "rotateY":
-		case "rotateZ": return 0;
+		case "rotateZ":
+		case "skew":
+		case "skewX":
+		case "skewY": return 0;
 		case "scale":
 		case "scaleX":
-		case "scaleY": return 1;
+		case "scaleY":
+		case "scaleZ": return 1;
 		default: return 0;
 	}
 }
 //#endregion
 //#region src/motion/adaptedMotion.js
-function j(e, t) {
+function M(e, t) {
 	if (!e || !t) return !1;
 	for (let n of [
 		"x",
@@ -201,7 +225,7 @@ function j(e, t) {
 	]) if (e[n] === 0 || t[n] === 0) return !0;
 	return !1;
 }
-function M(e) {
+function N(e) {
 	return i({
 		name: `adaptedMotion.${e}`,
 		inheritAttrs: !1,
@@ -216,7 +240,7 @@ function M(e) {
 						height: n
 					};
 				}
-				if (!d.value || !j(l.initial, l.animate)) return;
+				if (!d.value || !M(l.initial, l.animate)) return;
 				let t = e?.getAttribute?.("data-ap");
 				if (!t || typeof document > "u" || document.querySelectorAll(`[data-ap="${t}"]`).length <= 1) return;
 				f.value = !1;
@@ -231,24 +255,24 @@ function M(e) {
 					width: Infinity,
 					height: Infinity
 				};
-				e.variants && typeof e.variants == "object" && (e.variants = w(e.variants, t));
+				e.variants && typeof e.variants == "object" && (e.variants = T(e.variants, t));
 				let n = e.initial && typeof e.initial == "object" ? e.initial : null, r = e.animate && typeof e.animate == "object" ? e.animate : null;
-				if (n && r && (e.initial = S(n, r, n, t), e.animate = S(n, r, r, t), e.exit && typeof e.exit == "object" && (e.exit = S(n, r, e.exit, t))), e.exit && typeof e.exit == "object" && e.exit.transition) {
+				if (n && r && (e.initial = C(n, r, n, t), e.animate = C(n, r, r, t), e.exit && typeof e.exit == "object" && (e.exit = C(n, r, e.exit, t))), e.exit && typeof e.exit == "object" && e.exit.transition) {
 					let t = e.exit.transition, { transition: n, ...r } = e.exit, i = new Set(Object.keys(r));
 					e.exit = {
 						...r,
-						transition: E(t, i)
+						transition: D(t, i)
 					};
 				}
 				if (e.transition && typeof e.transition == "object") {
 					let t = new Set([...Object.keys(n || {}), ...Object.keys(r || {})]);
-					e.transition = E(e.transition, t);
+					e.transition = D(e.transition, t);
 				}
 				if (r && r.transition) {
 					let { transition: t, ...n } = e.animate, r = new Set(Object.keys(n));
 					e.animate = {
 						...n,
-						transition: E(t, r)
+						transition: D(t, r)
 					};
 				}
 				if (f.value === !1 && (e.animate = { opacity: 0 }), e.style && typeof e.style == "object") {
@@ -262,7 +286,7 @@ function M(e) {
 		}
 	});
 }
-var N = {}, P = i({
+var P = {}, F = i({
 	name: "AdaptedAnimatePresence",
 	setup(t, { attrs: i, slots: a }) {
 		let s = n(), c = r(() => s.value ? {
@@ -271,8 +295,8 @@ var N = {}, P = i({
 		} : i);
 		return () => o(e, c.value, a);
 	}
-}), F = new Proxy({ AnimatePresence: P }, { get(e, t) {
-	return t in e ? e[t] : (N[t] || (N[t] = M(t)), N[t]);
+}), I = new Proxy({ AnimatePresence: F }, { get(e, t) {
+	return t in e ? e[t] : (P[t] || (P[t] = N(t)), P[t]);
 } });
 //#endregion
-export { p as _, E as a, O as c, y as d, b as f, m as g, f as h, w as i, k as l, h as m, S as n, T as o, _ as p, C as r, A as s, F as t, D as u, l as v };
+export { p as _, D as a, k as c, b as d, x as f, m as g, f as h, T as i, A as l, h as m, C as n, E as o, v as p, w as r, j as s, I as t, O as u, l as v };

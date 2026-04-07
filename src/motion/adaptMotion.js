@@ -68,16 +68,27 @@ export function adaptKeyframe(from, to, target, elementSize = null) {
                         : 1;
                     slideToFadeInjected = true;
                     // no movement
+                } else if (Array.isArray(target[property])) {
+                    // neutralize every value in the keyframe array
+                    adapted[property] = target[property].map(
+                        () => getNeutralValue(property),
+                    );
                 } else {
                     adapted[property] = getNeutralValue(property);
                 }
                 break;
             case "moderate":
-                adapted[property] = clampToThreshold(
-                    property,
-                    target[property],
-                    elementSize,
-                );
+                if (Array.isArray(target[property])) {
+                    adapted[property] = target[property].map((v) =>
+                        clampToThreshold(property, v, elementSize),
+                    );
+                } else {
+                    adapted[property] = clampToThreshold(
+                        property,
+                        target[property],
+                        elementSize,
+                    );
+                }
                 break;
             case "low":
                 adapted[property] = target[property];
@@ -217,6 +228,11 @@ export function buildReducedTransition(originalTransition, properties) {
         base.velocity = undefined;
     }
 
+    // strip repeating animations
+    base.repeat = 0;
+    base.repeatType = undefined;
+    base.repeatDelay = undefined;
+
     // Check what property types we have
     const hasSpatial = [...properties].some((p) => {
         const cat = propertyCategories[p];
@@ -274,16 +290,23 @@ export function getNeutralValue(property) {
     switch (property) {
         case "x":
         case "y":
+        case "z":
         case "translateX":
         case "translateY":
+        case "translateZ":
+        case "perspective":
         case "rotate":
         case "rotateX":
         case "rotateY":
         case "rotateZ":
+        case "skew":
+        case "skewX":
+        case "skewY":
             return 0;
         case "scale":
         case "scaleX":
         case "scaleY":
+        case "scaleZ":
             return 1;
         default:
             return 0;
