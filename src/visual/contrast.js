@@ -1,13 +1,14 @@
+import { ref, computed, onScopeDispose, toValue } from "vue";
+
 /**
  * WCAG 2.1 contrast ratio utilities
- * All colors accepted as hex strings (#RGB or #RRGGBB)
  */
 
-// parse hex to rgb values (0-255)
+// parse hex to rgb values
 export function parseHex(hex) {
     let h = hex.replace("#", "");
 
-    // expand shorthand (#abc -> #aabbcc)
+    // expand short hex codes like #abc to #aabbcc
     if (h.length === 3) {
         h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
     }
@@ -19,7 +20,7 @@ export function parseHex(hex) {
     };
 }
 
-// linearize a single sRGB channel (0-255 -> linear)
+// linearize a single sRGB
 function linearize(channel) {
     const s = channel / 255;
     return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
@@ -76,4 +77,67 @@ export function suggestForeground(bg, targetRatio = 4.5) {
     if (white >= targetRatio) return "#ffffff";
     if (black >= targetRatio) return "#000000";
     return white > black ? "#ffffff" : "#000000";
+}
+
+/**
+ * reactive prefers-contrast detection
+ *  more, less, custom, no-preference,
+ */
+export function useContrastPreference() {
+    if (typeof window === "undefined") {
+        return computed(() => "no-preference");
+    }
+
+    const preference = ref("no-preference");
+
+    const queries = {
+        more: window.matchMedia("(prefers-contrast: more)"),
+        less: window.matchMedia("(prefers-contrast: less)"),
+        custom: window.matchMedia("(prefers-contrast: custom)"),
+    };
+
+    function update() {
+        if (queries.more.matches) preference.value = "more";
+        else if (queries.less.matches) preference.value = "less";
+        else if (queries.custom.matches) preference.value = "custom";
+        else preference.value = "no-preference";
+    }
+
+    update();
+
+    for (const mq of Object.values(queries)) {
+        mq.addEventListener("change", update);
+    }
+
+    onScopeDispose(() => {
+        for (const mq of Object.values(queries)) {
+            mq.removeEventListener("change", update);
+        }
+    });
+
+    return computed(() => preference.value);
+}
+
+/**
+ * returns an adapted foreground color based on contrast requirements
+ * 3:1 is baseline, 4.5:1 when prefers-contrast is on
+ *
+ * @param {string} fg
+ * @param {string} bg
+ * @returns {import('vue').ComputedRef<string>}
+ */
+export function useAdaptedContrast(fg, bg) {
+    const preference = useContrastPreference();
+
+    return computed(() => {
+        const fgVal = toValue(fg);
+        const bgVal = toValue(bg);
+        const ratio = contrastRatio(fgVal, bgVal);
+
+        const target = preference.value === "more" ? 4.5 : 3;
+
+        if (ratio >= target) return fgVal;
+
+        return suggestForeground(bgVal, target);
+    });
 }

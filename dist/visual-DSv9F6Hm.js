@@ -1,6 +1,6 @@
-import { isRef as e, onScopeDispose as t, ref as n, toValue as r, watch as i } from "vue";
+import { computed as e, isRef as t, onScopeDispose as n, ref as r, toValue as i, watch as a } from "vue";
 //#region node_modules/tabbable/dist/index.esm.js
-var a = [
+var o = [
 	"input:not([inert]):not([inert] *)",
 	"select:not([inert]):not([inert] *)",
 	"textarea:not([inert]):not([inert] *)",
@@ -12,66 +12,66 @@ var a = [
 	"[contenteditable]:not([contenteditable=\"false\"]):not([inert]):not([inert] *)",
 	"details>summary:first-of-type:not([inert]):not([inert] *)",
 	"details:not([inert]):not([inert] *)"
-], o = /* @__PURE__ */ a.join(","), s = typeof Element > "u", c = s ? function() {} : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector, l = !s && Element.prototype.getRootNode ? function(e) {
+], s = /* @__PURE__ */ o.join(","), c = typeof Element > "u", l = c ? function() {} : Element.prototype.matches || Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector, u = !c && Element.prototype.getRootNode ? function(e) {
 	return e?.getRootNode?.call(e);
 } : function(e) {
 	return e?.ownerDocument;
-}, u = function(e, t) {
+}, d = function(e, t) {
 	t === void 0 && (t = !0);
 	var n = e?.getAttribute?.call(e, "inert");
-	return n === "" || n === "true" || t && e && (typeof e.closest == "function" ? e.closest("[inert]") : u(e.parentNode));
-}, d = function(e) {
+	return n === "" || n === "true" || t && e && (typeof e.closest == "function" ? e.closest("[inert]") : d(e.parentNode));
+}, f = function(e) {
 	var t = e?.getAttribute?.call(e, "contenteditable");
 	return t === "" || t === "true";
-}, f = function(e, t, n) {
-	if (u(e)) return [];
-	var r = Array.prototype.slice.apply(e.querySelectorAll(o));
-	return t && c.call(e, o) && r.unshift(e), r = r.filter(n), r;
 }, p = function(e, t, n) {
+	if (d(e)) return [];
+	var r = Array.prototype.slice.apply(e.querySelectorAll(s));
+	return t && l.call(e, s) && r.unshift(e), r = r.filter(n), r;
+}, m = function(e, t, n) {
 	for (var r = [], i = Array.from(e); i.length;) {
 		var a = i.shift();
-		if (!u(a, !1)) if (a.tagName === "SLOT") {
-			var s = a.assignedElements(), l = p(s.length ? s : a.children, !0, n);
-			n.flatten ? r.push.apply(r, l) : r.push({
+		if (!d(a, !1)) if (a.tagName === "SLOT") {
+			var o = a.assignedElements(), c = m(o.length ? o : a.children, !0, n);
+			n.flatten ? r.push.apply(r, c) : r.push({
 				scopeParent: a,
-				candidates: l
+				candidates: c
 			});
 		} else {
-			c.call(a, o) && n.filter(a) && (t || !e.includes(a)) && r.push(a);
-			var d = a.shadowRoot || typeof n.getShadowRoot == "function" && n.getShadowRoot(a), f = !u(d, !1) && (!n.shadowRootFilter || n.shadowRootFilter(a));
-			if (d && f) {
-				var m = p(d === !0 ? a.children : d.children, !0, n);
-				n.flatten ? r.push.apply(r, m) : r.push({
+			l.call(a, s) && n.filter(a) && (t || !e.includes(a)) && r.push(a);
+			var u = a.shadowRoot || typeof n.getShadowRoot == "function" && n.getShadowRoot(a), f = !d(u, !1) && (!n.shadowRootFilter || n.shadowRootFilter(a));
+			if (u && f) {
+				var p = m(u === !0 ? a.children : u.children, !0, n);
+				n.flatten ? r.push.apply(r, p) : r.push({
 					scopeParent: a,
-					candidates: m
+					candidates: p
 				});
 			} else i.unshift.apply(i, a.children);
 		}
 	}
 	return r;
-}, m = function(e) {
-	return !isNaN(parseInt(e.getAttribute("tabindex"), 10));
 }, h = function(e) {
+	return !isNaN(parseInt(e.getAttribute("tabindex"), 10));
+}, g = function(e) {
 	if (!e) throw Error("No node provided");
-	return e.tabIndex < 0 && (/^(AUDIO|VIDEO|DETAILS)$/.test(e.tagName) || d(e)) && !m(e) ? 0 : e.tabIndex;
-}, g = function(e, t) {
-	var n = h(e);
-	return n < 0 && t && !m(e) ? 0 : n;
+	return e.tabIndex < 0 && (/^(AUDIO|VIDEO|DETAILS)$/.test(e.tagName) || f(e)) && !h(e) ? 0 : e.tabIndex;
 }, _ = function(e, t) {
+	var n = g(e);
+	return n < 0 && t && !h(e) ? 0 : n;
+}, v = function(e, t) {
 	return e.tabIndex === t.tabIndex ? e.documentOrder - t.documentOrder : e.tabIndex - t.tabIndex;
-}, v = function(e) {
-	return e.tagName === "INPUT";
 }, y = function(e) {
-	return v(e) && e.type === "hidden";
+	return e.tagName === "INPUT";
 }, b = function(e) {
+	return y(e) && e.type === "hidden";
+}, x = function(e) {
 	return e.tagName === "DETAILS" && Array.prototype.slice.apply(e.children).some(function(e) {
 		return e.tagName === "SUMMARY";
 	});
-}, x = function(e, t) {
+}, S = function(e, t) {
 	for (var n = 0; n < e.length; n++) if (e[n].checked && e[n].form === t) return e[n];
-}, S = function(e) {
+}, C = function(e) {
 	if (!e.name) return !0;
-	var t = e.form || l(e), n = function(e) {
+	var t = e.form || u(e), n = function(e) {
 		return t.querySelectorAll("input[type=\"radio\"][name=\"" + e + "\"]");
 	}, r;
 	if (typeof window < "u" && window.CSS !== void 0 && typeof window.CSS.escape == "function") r = n(window.CSS.escape(e.name));
@@ -80,26 +80,26 @@ var a = [
 	} catch (e) {
 		return console.error("Looks like you have a radio button with a name attribute containing invalid CSS selector characters and need the CSS.escape polyfill: %s", e.message), !1;
 	}
-	var i = x(r, e.form);
+	var i = S(r, e.form);
 	return !i || i === e;
-}, C = function(e) {
-	return v(e) && e.type === "radio";
 }, w = function(e) {
-	return C(e) && !S(e);
+	return y(e) && e.type === "radio";
 }, T = function(e) {
-	var t = e && l(e), n = t?.host, r = !1;
+	return w(e) && !C(e);
+}, E = function(e) {
+	var t = e && u(e), n = t?.host, r = !1;
 	if (t && t !== e) {
 		var i, a, o;
 		for (r = !!((i = n) != null && (a = i.ownerDocument) != null && a.contains(n) || e != null && (o = e.ownerDocument) != null && o.contains(e)); !r && n;) {
 			var s, c;
-			t = l(n), n = t?.host, r = !!((s = n) != null && (c = s.ownerDocument) != null && c.contains(n));
+			t = u(n), n = t?.host, r = !!((s = n) != null && (c = s.ownerDocument) != null && c.contains(n));
 		}
 	}
 	return r;
-}, E = function(e) {
+}, D = function(e) {
 	var t = e.getBoundingClientRect(), n = t.width, r = t.height;
 	return n === 0 && r === 0;
-}, D = function(e, t) {
+}, ee = function(e, t) {
 	var n = t.displayCheck, r = t.getShadowRoot;
 	if (n === "full-native" && "checkVisibility" in e) return !e.checkVisibility({
 		checkOpacity: !1,
@@ -109,44 +109,44 @@ var a = [
 		checkVisibilityCSS: !0
 	});
 	if (getComputedStyle(e).visibility === "hidden") return !0;
-	var i = c.call(e, "details>summary:first-of-type") ? e.parentElement : e;
-	if (c.call(i, "details:not([open]) *")) return !0;
+	var i = l.call(e, "details>summary:first-of-type") ? e.parentElement : e;
+	if (l.call(i, "details:not([open]) *")) return !0;
 	if (!n || n === "full" || n === "full-native" || n === "legacy-full") {
 		if (typeof r == "function") {
 			for (var a = e; e;) {
-				var o = e.parentElement, s = l(e);
-				if (o && !o.shadowRoot && r(o) === !0) return E(e);
+				var o = e.parentElement, s = u(e);
+				if (o && !o.shadowRoot && r(o) === !0) return D(e);
 				e = e.assignedSlot ? e.assignedSlot : !o && s !== e.ownerDocument ? s.host : o;
 			}
 			e = a;
 		}
-		if (T(e)) return !e.getClientRects().length;
+		if (E(e)) return !e.getClientRects().length;
 		if (n !== "legacy-full") return !0;
-	} else if (n === "non-zero-area") return E(e);
+	} else if (n === "non-zero-area") return D(e);
 	return !1;
-}, ee = function(e) {
+}, O = function(e) {
 	if (/^(INPUT|BUTTON|SELECT|TEXTAREA)$/.test(e.tagName)) for (var t = e.parentElement; t;) {
 		if (t.tagName === "FIELDSET" && t.disabled) {
 			for (var n = 0; n < t.children.length; n++) {
 				var r = t.children.item(n);
-				if (r.tagName === "LEGEND") return c.call(t, "fieldset[disabled] *") ? !0 : !r.contains(e);
+				if (r.tagName === "LEGEND") return l.call(t, "fieldset[disabled] *") ? !0 : !r.contains(e);
 			}
 			return !0;
 		}
 		t = t.parentElement;
 	}
 	return !1;
-}, O = function(e, t) {
-	return !(t.disabled || y(t) || D(t, e) || b(t) || ee(t));
 }, k = function(e, t) {
-	return !(w(t) || h(t) < 0 || !O(e, t));
-}, A = function(e) {
+	return !(t.disabled || b(t) || ee(t, e) || x(t) || O(t));
+}, A = function(e, t) {
+	return !(T(t) || g(t) < 0 || !k(e, t));
+}, te = function(e) {
 	var t = parseInt(e.getAttribute("tabindex"), 10);
 	return !!(isNaN(t) || t >= 0);
 }, j = function(e) {
 	var t = [], n = [];
 	return e.forEach(function(e, r) {
-		var i = !!e.scopeParent, a = i ? e.scopeParent : e, o = g(a, i), s = i ? j(e.candidates) : a;
+		var i = !!e.scopeParent, a = i ? e.scopeParent : e, o = _(a, i), s = i ? j(e.candidates) : a;
 		o === 0 ? i ? t.push.apply(t, s) : t.push(a) : n.push({
 			documentOrder: r,
 			tabIndex: o,
@@ -154,28 +154,28 @@ var a = [
 			isScope: i,
 			content: s
 		});
-	}), n.sort(_).reduce(function(e, t) {
+	}), n.sort(v).reduce(function(e, t) {
 		return t.isScope ? e.push.apply(e, t.content) : e.push(t.content), e;
 	}, []).concat(t);
-}, te = function(e, t) {
-	return t ||= {}, j(t.getShadowRoot ? p([e], t.includeContainer, {
-		filter: k.bind(null, t),
+}, ne = function(e, t) {
+	return t ||= {}, j(t.getShadowRoot ? m([e], t.includeContainer, {
+		filter: A.bind(null, t),
 		flatten: !1,
 		getShadowRoot: t.getShadowRoot,
-		shadowRootFilter: A
-	}) : f(e, t.includeContainer, k.bind(null, t)));
-}, ne = function(e, t) {
-	return t ||= {}, t.getShadowRoot ? p([e], t.includeContainer, {
-		filter: O.bind(null, t),
+		shadowRootFilter: te
+	}) : p(e, t.includeContainer, A.bind(null, t)));
+}, re = function(e, t) {
+	return t ||= {}, t.getShadowRoot ? m([e], t.includeContainer, {
+		filter: k.bind(null, t),
 		flatten: !0,
 		getShadowRoot: t.getShadowRoot
-	}) : f(e, t.includeContainer, O.bind(null, t));
+	}) : p(e, t.includeContainer, k.bind(null, t));
 }, M = function(e, t) {
 	if (t ||= {}, !e) throw Error("No node provided");
-	return c.call(e, o) === !1 ? !1 : k(t, e);
-}, re = /* @__PURE__ */ a.concat("iframe:not([inert]):not([inert] *)").join(","), N = function(e, t) {
+	return l.call(e, s) === !1 ? !1 : A(t, e);
+}, ie = /* @__PURE__ */ o.concat("iframe:not([inert]):not([inert] *)").join(","), N = function(e, t) {
 	if (t ||= {}, !e) throw Error("No node provided");
-	return c.call(e, re) === !1 ? !1 : O(t, e);
+	return l.call(e, ie) === !1 ? !1 : k(t, e);
 };
 //#endregion
 //#region node_modules/focus-trap/dist/focus-trap.esm.js
@@ -184,7 +184,7 @@ function P(e, t) {
 	for (var n = 0, r = Array(t); n < t; n++) r[n] = e[n];
 	return r;
 }
-function ie(e) {
+function ae(e) {
 	if (Array.isArray(e)) return P(e);
 }
 function F(e, t, n, r, i, a, o) {
@@ -214,7 +214,7 @@ function I(e) {
 function L(e, t) {
 	var n = typeof Symbol < "u" && e[Symbol.iterator] || e["@@iterator"];
 	if (!n) {
-		if (Array.isArray(e) || (n = U(e)) || t) {
+		if (Array.isArray(e) || (n = H(e)) || t) {
 			n && (e = n);
 			var r = 0, i = function() {};
 			return {
@@ -254,18 +254,18 @@ function L(e, t) {
 		}
 	};
 }
-function ae(e, t, n) {
-	return (t = H(t)) in e ? Object.defineProperty(e, t, {
+function oe(e, t, n) {
+	return (t = de(t)) in e ? Object.defineProperty(e, t, {
 		value: n,
 		enumerable: !0,
 		configurable: !0,
 		writable: !0
 	}) : e[t] = n, e;
 }
-function oe(e) {
+function se(e) {
 	if (typeof Symbol < "u" && e[Symbol.iterator] != null || e["@@iterator"] != null) return Array.from(e);
 }
-function se() {
+function ce() {
 	throw TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 function R(e, t) {
@@ -282,7 +282,7 @@ function z(e) {
 	for (var t = 1; t < arguments.length; t++) {
 		var n = arguments[t] == null ? {} : arguments[t];
 		t % 2 ? R(Object(n), !0).forEach(function(t) {
-			ae(e, t, n[t]);
+			oe(e, t, n[t]);
 		}) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(n)) : R(Object(n)).forEach(function(t) {
 			Object.defineProperty(e, t, Object.getOwnPropertyDescriptor(n, t));
 		});
@@ -381,10 +381,10 @@ function V(e, t, n, r) {
 		}) : e[t] = n : (a("next", 0), a("throw", 1), a("return", 2));
 	}, V(e, t, n, r);
 }
-function ce(e) {
-	return ie(e) || oe(e) || U(e) || se();
+function le(e) {
+	return ae(e) || se(e) || H(e) || ce();
 }
-function le(e, t) {
+function ue(e, t) {
 	if (typeof e != "object" || !e) return e;
 	var n = e[Symbol.toPrimitive];
 	if (n !== void 0) {
@@ -394,62 +394,62 @@ function le(e, t) {
 	}
 	return (t === "string" ? String : Number)(e);
 }
-function H(e) {
-	var t = le(e, "string");
+function de(e) {
+	var t = ue(e, "string");
 	return typeof t == "symbol" ? t : t + "";
 }
-function U(e, t) {
+function H(e, t) {
 	if (e) {
 		if (typeof e == "string") return P(e, t);
 		var n = {}.toString.call(e).slice(8, -1);
 		return n === "Object" && e.constructor && (n = e.constructor.name), n === "Map" || n === "Set" ? Array.from(e) : n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n) ? P(e, t) : void 0;
 	}
 }
-var W = {
+var U = {
 	getActiveTrap: function(e) {
 		return e?.length > 0 ? e[e.length - 1] : null;
 	},
 	activateTrap: function(e, t) {
-		t !== W.getActiveTrap(e) && W.pauseTrap(e);
+		t !== U.getActiveTrap(e) && U.pauseTrap(e);
 		var n = e.indexOf(t);
 		n === -1 || e.splice(n, 1), e.push(t);
 	},
 	deactivateTrap: function(e, t) {
 		var n = e.indexOf(t);
-		n !== -1 && e.splice(n, 1), W.unpauseTrap(e);
+		n !== -1 && e.splice(n, 1), U.unpauseTrap(e);
 	},
 	pauseTrap: function(e) {
-		W.getActiveTrap(e)?._setPausedState(!0);
+		U.getActiveTrap(e)?._setPausedState(!0);
 	},
 	unpauseTrap: function(e) {
-		var t = W.getActiveTrap(e);
+		var t = U.getActiveTrap(e);
 		t && !t._isManuallyPaused() && t._setPausedState(!1);
 	}
-}, ue = function(e) {
-	return e.tagName && e.tagName.toLowerCase() === "input" && typeof e.select == "function";
-}, de = function(e) {
-	return e?.key === "Escape" || e?.key === "Esc" || e?.keyCode === 27;
-}, G = function(e) {
-	return e?.key === "Tab" || e?.keyCode === 9;
 }, fe = function(e) {
-	return G(e) && !e.shiftKey;
+	return e.tagName && e.tagName.toLowerCase() === "input" && typeof e.select == "function";
 }, pe = function(e) {
-	return G(e) && e.shiftKey;
-}, K = function(e) {
+	return e?.key === "Escape" || e?.key === "Esc" || e?.keyCode === 27;
+}, W = function(e) {
+	return e?.key === "Tab" || e?.keyCode === 9;
+}, me = function(e) {
+	return W(e) && !e.shiftKey;
+}, he = function(e) {
+	return W(e) && e.shiftKey;
+}, G = function(e) {
 	return setTimeout(e, 0);
-}, q = function(e) {
+}, K = function(e) {
 	var t = [...arguments].slice(1);
 	return typeof e == "function" ? e.apply(void 0, t) : e;
-}, J = function(e) {
+}, q = function(e) {
 	return e.target.shadowRoot && typeof e.composedPath == "function" ? e.composedPath()[0] : e.target;
-}, me = [], he = function(e, t) {
-	var n = t?.document || document, r = t?.trapStack || me, i = z({
+}, ge = [], _e = function(e, t) {
+	var n = t?.document || document, r = t?.trapStack || ge, i = z({
 		returnFocusOnDeactivate: !0,
 		escapeDeactivates: !0,
 		delayInitialFocus: !0,
 		isolateSubtrees: !1,
-		isKeyForward: fe,
-		isKeyBackward: pe
+		isKeyForward: me,
+		isKeyBackward: he
 	}, t), a = {
 		containers: [],
 		containerGroups: [],
@@ -475,7 +475,7 @@ var W = {
 		});
 	}, l = function(e) {
 		var t = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : {}, r = t.hasFallback, a = r === void 0 ? !1 : r, o = t.params, s = o === void 0 ? [] : o, c = i[e];
-		if (typeof c == "function" && (c = c.apply(void 0, ce(s))), c === !0 && (c = void 0), !c) {
+		if (typeof c == "function" && (c = c.apply(void 0, le(s))), c === !0 && (c = void 0), !c) {
 			if (c === void 0 || c === !1) return c;
 			throw Error(`\`${e}\` was specified but was not a node, or did not return a node`);
 		}
@@ -502,7 +502,7 @@ var W = {
 		return e;
 	}, d = function() {
 		if (a.containerGroups = a.containers.map(function(e) {
-			var t = te(e, i.tabbableOptions), n = ne(e, i.tabbableOptions), r = t.length > 0 ? t[0] : void 0, a = t.length > 0 ? t[t.length - 1] : void 0, o = n.find(function(e) {
+			var t = ne(e, i.tabbableOptions), n = re(e, i.tabbableOptions), r = t.length > 0 ? t[0] : void 0, a = t.length > 0 ? t[t.length - 1] : void 0, o = n.find(function(e) {
 				return M(e);
 			}), s = n.slice().reverse().find(function(e) {
 				return M(e);
@@ -512,7 +512,7 @@ var W = {
 				tabbableNodes: t,
 				focusableNodes: n,
 				posTabIndexesFound: !!t.find(function(e) {
-					return h(e) > 0;
+					return g(e) > 0;
 				}),
 				firstTabbableNode: r,
 				lastTabbableNode: a,
@@ -542,14 +542,14 @@ var W = {
 				p(u());
 				return;
 			}
-			e.focus({ preventScroll: !!i.preventScroll }), a.mostRecentlyFocusedNode = e, ue(e) && e.select();
+			e.focus({ preventScroll: !!i.preventScroll }), a.mostRecentlyFocusedNode = e, fe(e) && e.select();
 		}
 	}, m = function(e) {
 		var t = l("setReturnFocus", { params: [e] });
 		return t || (t === !1 ? !1 : e);
-	}, g = function(e) {
+	}, h = function(e) {
 		var t = e.target, n = e.event, r = e.isBackward, o = r === void 0 ? !1 : r;
-		t ||= J(n), d();
+		t ||= q(n), d();
 		var s = null;
 		if (a.tabbableGroups.length > 0) {
 			var u = c(t, n), f = u >= 0 ? a.containerGroups[u] : void 0;
@@ -560,9 +560,9 @@ var W = {
 					return t === n;
 				});
 				if (p < 0 && (f.container === t || N(t, i.tabbableOptions) && !M(t, i.tabbableOptions) && !f.nextTabbableNode(t, !1)) && (p = u), p >= 0) {
-					var m = p === 0 ? a.tabbableGroups.length - 1 : p - 1, g = a.tabbableGroups[m];
-					s = h(t) >= 0 ? g.lastTabbableNode : g.lastDomTabbableNode;
-				} else G(n) || (s = f.nextTabbableNode(t, !1));
+					var m = p === 0 ? a.tabbableGroups.length - 1 : p - 1, h = a.tabbableGroups[m];
+					s = g(t) >= 0 ? h.lastTabbableNode : h.lastDomTabbableNode;
+				} else W(n) || (s = f.nextTabbableNode(t, !1));
 			} else {
 				var _ = a.tabbableGroups.findIndex(function(e) {
 					var n = e.lastTabbableNode;
@@ -570,26 +570,26 @@ var W = {
 				});
 				if (_ < 0 && (f.container === t || N(t, i.tabbableOptions) && !M(t, i.tabbableOptions) && !f.nextTabbableNode(t)) && (_ = u), _ >= 0) {
 					var v = _ === a.tabbableGroups.length - 1 ? 0 : _ + 1, y = a.tabbableGroups[v];
-					s = h(t) >= 0 ? y.firstTabbableNode : y.firstDomTabbableNode;
-				} else G(n) || (s = f.nextTabbableNode(t));
+					s = g(t) >= 0 ? y.firstTabbableNode : y.firstDomTabbableNode;
+				} else W(n) || (s = f.nextTabbableNode(t));
 			}
 		} else s = l("fallbackFocus");
 		return s;
 	}, _ = function(e) {
-		if (!(c(J(e), e) >= 0)) {
-			if (q(i.clickOutsideDeactivates, e)) {
+		if (!(c(q(e), e) >= 0)) {
+			if (K(i.clickOutsideDeactivates, e)) {
 				o.deactivate({ returnFocus: i.returnFocusOnDeactivate });
 				return;
 			}
-			q(i.allowOutsideClick, e) || e.preventDefault();
+			K(i.allowOutsideClick, e) || e.preventDefault();
 		}
 	}, v = function(e) {
-		var t = J(e), n = c(t, e) >= 0;
+		var t = q(e), n = c(t, e) >= 0;
 		if (n || t instanceof Document) n && (a.mostRecentlyFocusedNode = t);
 		else {
 			e.stopImmediatePropagation();
 			var r, o = !0;
-			if (a.mostRecentlyFocusedNode) if (h(a.mostRecentlyFocusedNode) > 0) {
+			if (a.mostRecentlyFocusedNode) if (g(a.mostRecentlyFocusedNode) > 0) {
 				var s = c(a.mostRecentlyFocusedNode), l = a.containerGroups[s].tabbableNodes;
 				if (l.length > 0) {
 					var d = l.findIndex(function(e) {
@@ -599,11 +599,11 @@ var W = {
 				}
 			} else a.containerGroups.some(function(e) {
 				return e.tabbableNodes.some(function(e) {
-					return h(e) > 0;
+					return g(e) > 0;
 				});
 			}) || (o = !1);
 			else o = !1;
-			o && (r = g({
+			o && (r = h({
 				target: a.mostRecentlyFocusedNode,
 				isBackward: i.isKeyBackward(a.recentNavEvent)
 			})), p(r || a.mostRecentlyFocusedNode || u());
@@ -612,23 +612,23 @@ var W = {
 	}, y = function(e) {
 		var t = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : !1;
 		a.recentNavEvent = e;
-		var n = g({
+		var n = h({
 			event: e,
 			isBackward: t
 		});
-		n && (G(e) && e.preventDefault(), p(n));
+		n && (W(e) && e.preventDefault(), p(n));
 	}, b = function(e) {
 		(i.isKeyForward(e) || i.isKeyBackward(e)) && y(e, i.isKeyBackward(e));
 	}, x = function(e) {
-		de(e) && q(i.escapeDeactivates, e) !== !1 && (e.preventDefault(), o.deactivate());
+		pe(e) && K(i.escapeDeactivates, e) !== !1 && (e.preventDefault(), o.deactivate());
 	}, S = function(e) {
-		c(J(e), e) >= 0 || q(i.clickOutsideDeactivates, e) || q(i.allowOutsideClick, e) || (e.preventDefault(), e.stopImmediatePropagation());
+		c(q(e), e) >= 0 || K(i.clickOutsideDeactivates, e) || K(i.allowOutsideClick, e) || (e.preventDefault(), e.stopImmediatePropagation());
 	}, C = function() {
 		if (!a.active) return Promise.resolve();
-		W.activateTrap(r, o);
+		U.activateTrap(r, o);
 		var e;
 		return i.delayInitialFocus ? e = new Promise(function(e) {
-			a.delayInitialFocusTimer = K(function() {
+			a.delayInitialFocusTimer = G(function() {
 				p(u()), e();
 			});
 		}) : (e = Promise.resolve(), p(u())), n.addEventListener("focusin", v, !0), n.addEventListener("mousedown", _, {
@@ -702,7 +702,7 @@ var W = {
 		},
 		activate: function(e) {
 			if (a.active) return this;
-			var t = s(e, "onActivate"), i = s(e, "onPostActivate"), c = s(e, "checkCanFocusTrap"), l = W.getActiveTrap(r), u = !1;
+			var t = s(e, "onActivate"), i = s(e, "onPostActivate"), c = s(e, "checkCanFocusTrap"), l = U.getActiveTrap(r), u = !1;
 			if (l && !l.paused) {
 				var p;
 				(p = l._setSubtreeIsolation) == null || p.call(l, !1), u = !0;
@@ -726,7 +726,7 @@ var W = {
 				if (c) return c(a.containers.concat()).then(m, m), this;
 				m();
 			} catch (e) {
-				if (l === W.getActiveTrap(r) && u) {
+				if (l === U.getActiveTrap(r) && u) {
 					var h;
 					(h = l._setSubtreeIsolation) == null || h.call(l, !0);
 				}
@@ -741,11 +741,11 @@ var W = {
 				onPostDeactivate: i.onPostDeactivate,
 				checkCanReturnFocus: i.checkCanReturnFocus
 			}, e);
-			clearTimeout(a.delayInitialFocusTimer), a.delayInitialFocusTimer = void 0, a.paused || o._setSubtreeIsolation(!1), a.alreadySilent.clear(), T(), a.active = !1, a.paused = !1, D(), W.deactivateTrap(r, o);
+			clearTimeout(a.delayInitialFocusTimer), a.delayInitialFocusTimer = void 0, a.paused || o._setSubtreeIsolation(!1), a.alreadySilent.clear(), T(), a.active = !1, a.paused = !1, D(), U.deactivateTrap(r, o);
 			var n = s(t, "onDeactivate"), c = s(t, "onPostDeactivate"), l = s(t, "checkCanReturnFocus"), u = s(t, "returnFocus", "returnFocusOnDeactivate");
 			n?.();
 			var d = function() {
-				K(function() {
+				G(function() {
 					u && p(m(a.nodeFocusedBeforeActivation)), c?.();
 				});
 			};
@@ -814,30 +814,30 @@ var W = {
 };
 //#endregion
 //#region src/visual/focus.js
-function ge(a, o = {}) {
-	let { escapeDeactivates: s = !0, clickOutsideDeactivates: c = !1, returnFocusOnDeactivate: l = !0, initialFocus: u } = o, d = n(!1), f = null, p = null;
+function ve(e, o = {}) {
+	let { escapeDeactivates: s = !0, clickOutsideDeactivates: c = !1, returnFocusOnDeactivate: l = !0, initialFocus: u } = o, d = r(!1), f = null, p = null;
 	function m() {
-		return r(a);
+		return i(e);
 	}
 	function h() {
 		if (d.value) return;
-		let t = m();
-		if (t) {
+		let e = m();
+		if (e) {
 			if (typeof document < "u" && (p = document.activeElement), f) {
 				f.activate(), d.value = !0;
 				return;
 			}
-			f = he(t, {
+			f = _e(e, {
 				escapeDeactivates: s,
 				clickOutsideDeactivates: c,
 				initialFocus: u,
 				returnFocusOnDeactivate: !1,
-				fallbackFocus: t,
+				fallbackFocus: e,
 				onActivate() {
 					d.value = !0;
 				},
 				onDeactivate() {
-					d.value = !1, o.active && e(o.active) && (o.active.value = !1), l && p && (p.focus(), p = null);
+					d.value = !1, o.active && t(o.active) && (o.active.value = !1), l && p && (p.focus(), p = null);
 				}
 			}), f.activate();
 		}
@@ -845,11 +845,11 @@ function ge(a, o = {}) {
 	function g() {
 		!d.value || !f || f.deactivate();
 	}
-	return o.active !== void 0 && (i(() => r(o.active), (e) => {
+	return o.active !== void 0 && (a(() => i(o.active), (e) => {
 		e ? h() : g();
-	}, { flush: "post" }), i(m, (e) => {
-		e && r(o.active) && h();
-	}, { flush: "post" })), t(() => {
+	}, { flush: "post" }), a(m, (e) => {
+		e && i(o.active) && h();
+	}, { flush: "post" })), n(() => {
 		f &&= (f.deactivate(), null);
 	}), {
 		hasFocus: d,
@@ -859,7 +859,7 @@ function ge(a, o = {}) {
 }
 //#endregion
 //#region src/visual/contrast.js
-function Y(e) {
+function J(e) {
 	let t = e.replace("#", "");
 	return t.length === 3 && (t = t[0] + t[0] + t[1] + t[1] + t[2] + t[2]), {
 		r: parseInt(t.slice(0, 2), 16),
@@ -867,20 +867,20 @@ function Y(e) {
 		b: parseInt(t.slice(4, 6), 16)
 	};
 }
-function X(e) {
+function Y(e) {
 	let t = e / 255;
 	return t <= .04045 ? t / 12.92 : ((t + .055) / 1.055) ** 2.4;
 }
-function Z(e) {
-	let t = X(e.r), n = X(e.g), r = X(e.b);
+function X(e) {
+	let t = Y(e.r), n = Y(e.g), r = Y(e.b);
 	return .2126 * t + .7152 * n + .0722 * r;
 }
-function Q(e, t) {
-	let n = Z(Y(e)), r = Z(Y(t)), i = Math.max(n, r), a = Math.min(n, r);
+function Z(e, t) {
+	let n = X(J(e)), r = X(J(t)), i = Math.max(n, r), a = Math.min(n, r);
 	return (i + .05) / (a + .05);
 }
-function $(e, t) {
-	let n = Q(e, t);
+function ye(e, t) {
+	let n = Z(e, t);
 	return {
 		ratio: Math.round(n * 100) / 100,
 		aa: n >= 4.5,
@@ -889,9 +889,32 @@ function $(e, t) {
 		aaaLarge: n >= 4.5
 	};
 }
-function _e(e, t = 4.5) {
-	let n = Q("#ffffff", e), r = Q("#000000", e);
+function Q(e, t = 4.5) {
+	let n = Z("#ffffff", e), r = Z("#000000", e);
 	return n >= t ? "#ffffff" : r >= t ? "#000000" : n > r ? "#ffffff" : "#000000";
 }
+function $() {
+	if (typeof window > "u") return e(() => "no-preference");
+	let t = r("no-preference"), i = {
+		more: window.matchMedia("(prefers-contrast: more)"),
+		less: window.matchMedia("(prefers-contrast: less)"),
+		custom: window.matchMedia("(prefers-contrast: custom)")
+	};
+	function a() {
+		i.more.matches ? t.value = "more" : i.less.matches ? t.value = "less" : i.custom.matches ? t.value = "custom" : t.value = "no-preference";
+	}
+	a();
+	for (let e of Object.values(i)) e.addEventListener("change", a);
+	return n(() => {
+		for (let e of Object.values(i)) e.removeEventListener("change", a);
+	}), e(() => t.value);
+}
+function be(t, n) {
+	let r = $();
+	return e(() => {
+		let e = i(t), a = i(n);
+		return r.value !== "more" || Z(e, a) >= 4.5 ? e : Q(a, 4.5);
+	});
+}
 //#endregion
-export { _e as a, Z as i, $ as n, ge as o, Y as r, Q as t };
+export { Q as a, ve as c, X as i, ye as n, be as o, J as r, $ as s, Z as t };

@@ -5,4 +5,6 @@ export {
     contrastRatio,
     meetsContrast,
     suggestForeground,
+    useContrastPreference,
+    useAdaptedContrast,
 } from "./contrast.js";
