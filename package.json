@@ -1,5 +1,5 @@
 {
-    "name": "@antinomy-a11y",
+    "name": "antinomy-a11y",
     "version": "1.0.0",
     "description": "Accessibility utilities for Vue 3 — motion adaptation and visual accessibility enforcement",
     "type": "module",

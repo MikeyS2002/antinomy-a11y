@@ -8,3 +8,5 @@ export {
     useContrastPreference,
     useAdaptedContrast,
 } from "./contrast.js";
+export { vContrast } from "./vContrast.js";
+export { contrastAudit } from "./contrastAudit.js";

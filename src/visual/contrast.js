@@ -66,9 +66,7 @@ export function meetsContrast(fg, bg) {
 
 /**
  * given a background color, returns black or white
- * depending on which one meets the target ratio
- * defaults to AA normal text (4.5:1)
- */
+npm */
 export function suggestForeground(bg, targetRatio = 4.5) {
     const white = contrastRatio("#ffffff", bg);
     const black = contrastRatio("#000000", bg);
