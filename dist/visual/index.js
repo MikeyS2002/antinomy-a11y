@@ -1,2 +1,2 @@
-import { a as e, c as t, d as n, i as r, l as i, n as a, o, r as s, s as c, t as l, u } from "../visual-C1bWxIss.js";
-export { a as contrastAudit, r as contrastRatio, e as meetsContrast, o as parseHex, c as relativeLuminance, t as suggestForeground, i as useAdaptedContrast, u as useContrastPreference, n as useFocusTrap, s as vContrast, l as vFocusIndicator };
+import { a as e, c as t, d as n, f as r, i, l as a, n as o, o as s, p as c, r as l, s as u, t as d, u as f } from "../visual-CW2OLwjS.js";
+export { d as ariaAudit, i as contrastAudit, s as contrastRatio, u as meetsContrast, t as parseHex, a as relativeLuminance, f as suggestForeground, n as useAdaptedContrast, r as useContrastPreference, c as useFocusTrap, o as vAriaLabel, e as vContrast, l as vFocusIndicator };
