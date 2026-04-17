@@ -11,5 +11,6 @@ export {
 export { vContrast } from "./vContrast.js";
 export { contrastAudit } from "./contrastAudit.js";
 export { vFocusIndicator } from "./vFocusIndicator.js";
+export { focusIndicator } from "./focusIndicator.js";
 export { vAriaLabel } from "./vAriaLabel.js";
 export { ariaAudit } from "./ariaAudit.js";
