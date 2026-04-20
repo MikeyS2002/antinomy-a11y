@@ -14,3 +14,5 @@ export { vFocusIndicator } from "./vFocusIndicator.js";
 export { focusIndicator } from "./focusIndicator.js";
 export { vAriaLabel } from "./vAriaLabel.js";
 export { ariaAudit } from "./ariaAudit.js";
+export { keyboardAudit } from "./keyboardAudit.js";
+export { semanticAudit } from "./semanticAudit.js";
