@@ -18,4 +18,21 @@ export default defineConfig({
         outDir: "dist",
         emptyOutDir: true,
     },
+    test: {
+        environment: "node",
+        include: ["tests/**/*.test.js"],
+        coverage: {
+            provider: "v8",
+            include: ["src/**/*.js"],
+            exclude: [
+                "src/**/index.js",
+                "src/motion/adaptedMotion.js",
+                "src/visual/focus.js",
+                "src/visual/v*.js",
+                "src/visual/*Audit.js",
+                "src/visual/focusIndicator.js",
+            ],
+            reporter: ["text", "html"],
+        },
+    },
 });

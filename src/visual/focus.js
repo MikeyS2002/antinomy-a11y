@@ -25,7 +25,14 @@ export function useFocusTrap(target, options = {}) {
     let triggerElement = null;
 
     function resolveElement() {
-        return toValue(target);
+        const v = toValue(target);
+        if (!v) return null;
+        // If the ref points at a Vue component instance (eg. <adaptedMotion.div>),
+        // focus-trap needs the underlying DOM element, not the instance.
+        if (typeof v === "object" && !(v instanceof Element) && v.$el) {
+            return v.$el;
+        }
+        return v;
     }
 
     function activate() {
