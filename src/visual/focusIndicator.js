@@ -40,6 +40,81 @@ function isInteractive(el) {
     return el.matches(INTERACTIVE);
 }
 
+// ---- Hidden-but-focusable sweep ----
+const ORIGINAL_TABINDEX_ATTR = "data-a11y-original-tabindex";
+const HIDING_PROPS = ["opacity", "visibility"];
+const watchedAncestors = new WeakSet();
+let hiddenObserver = null;
+
+function isAncestorHidden(el) {
+    let current = el.parentElement;
+    while (current && current !== document.documentElement) {
+        const style = getComputedStyle(current);
+        if (style.opacity === "0") return current;
+        if (style.visibility === "hidden") return current;
+        current = current.parentElement;
+    }
+    return null;
+}
+
+function suppressTabindex(el) {
+    if (el.hasAttribute(ORIGINAL_TABINDEX_ATTR)) return;
+    const original = el.getAttribute("tabindex");
+    el.setAttribute(ORIGINAL_TABINDEX_ATTR, original ?? "__none__");
+    el.setAttribute("tabindex", "-1");
+}
+
+function restoreTabindex(el) {
+    if (!el.hasAttribute(ORIGINAL_TABINDEX_ATTR)) return;
+    const original = el.getAttribute(ORIGINAL_TABINDEX_ATTR);
+    el.removeAttribute(ORIGINAL_TABINDEX_ATTR);
+    if (original === "__none__") {
+        el.removeAttribute("tabindex");
+    } else {
+        el.setAttribute("tabindex", original);
+    }
+}
+
+function evaluateElement(el) {
+    const hider = isAncestorHidden(el);
+    if (hider) {
+        suppressTabindex(el);
+        watchAncestor(hider);
+    } else {
+        restoreTabindex(el);
+    }
+}
+
+function watchAncestor(ancestor) {
+    if (watchedAncestors.has(ancestor)) return;
+    watchedAncestors.add(ancestor);
+    hiddenObserver?.observe(ancestor, {
+        attributes: true,
+        attributeFilter: ["style", "class"],
+    });
+}
+
+function reEvaluateAllInteractive() {
+    const els = document.querySelectorAll(INTERACTIVE);
+    for (const el of els) {
+        evaluateElement(el);
+    }
+}
+
+function startHiddenSweep() {
+    if (typeof window === "undefined") return;
+
+    hiddenObserver = new MutationObserver(() => {
+        reEvaluateAllInteractive();
+    });
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            reEvaluateAllInteractive();
+        });
+    });
+}
+
 let installedOptions = null;
 
 function onFocusIn(e) {
@@ -93,5 +168,7 @@ export const focusIndicator = {
 
         document.addEventListener("focusin", onFocusIn, true);
         document.addEventListener("focusout", onFocusOut, true);
+
+        startHiddenSweep();
     },
 };
