@@ -115,6 +115,81 @@ function startHiddenSweep() {
     });
 }
 
+// ---- Clickable-non-interactive sweep ----
+// finds <div>, <span> etc. with a click handler and promotes them to tabindex=0
+// so the focus ring delegation can attach a visible indicator.
+const PROMOTED_ATTR = "data-a11y-promoted";
+const NON_INTERACTIVE_TAGS =
+    "div, span, article, section, li, p, figure, aside, header, footer, nav";
+let clickableObserver = null;
+
+function hasClickHandler(el) {
+    // inline onclick attribute (rare in modern code but unambiguous)
+    if (el.hasAttribute("onclick")) return true;
+    // role=button / role=link signals "i act like a widget" — if the dev added
+    // the role but forgot tabindex, we can safely promote.
+    const role = el.getAttribute("role");
+    if (role === "button" || role === "link") return true;
+    // heuristic: cursor: pointer set by author CSS usually signals clickability.
+    // cursor inherits, so a <span> inside a clickable <article> would also match.
+    // only promote if this element is the *origin* of the pointer cursor — its
+    // parent must not also be pointer.
+    const cursor = getComputedStyle(el).cursor;
+    if (cursor !== "pointer") return false;
+    const parent = el.parentElement;
+    if (parent && getComputedStyle(parent).cursor === "pointer") return false;
+    return true;
+}
+
+function shouldPromote(el) {
+    if (el.hasAttribute("tabindex")) return false;
+    // natively interactive elements (button, a[href], input...) already focusable
+    const tag = el.tagName.toLowerCase();
+    const nativelyFocusable =
+        tag === "a" ||
+        tag === "button" ||
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select" ||
+        tag === "details" ||
+        tag === "summary";
+    if (nativelyFocusable) return false;
+    return hasClickHandler(el);
+}
+
+function promoteElement(el) {
+    if (el.hasAttribute(PROMOTED_ATTR)) return;
+    el.setAttribute("tabindex", "0");
+    el.setAttribute(PROMOTED_ATTR, "true");
+}
+
+function reEvaluateClickables() {
+    const els = document.querySelectorAll(NON_INTERACTIVE_TAGS);
+    for (const el of els) {
+        if (shouldPromote(el)) promoteElement(el);
+    }
+}
+
+function startClickableSweep() {
+    if (typeof window === "undefined") return;
+
+    clickableObserver = new MutationObserver(() => {
+        reEvaluateClickables();
+    });
+    clickableObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["onclick", "style", "class"],
+    });
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            reEvaluateClickables();
+        });
+    });
+}
+
 let installedOptions = null;
 
 function onFocusIn(e) {
@@ -170,5 +245,6 @@ export const focusIndicator = {
         document.addEventListener("focusout", onFocusOut, true);
 
         startHiddenSweep();
+        startClickableSweep();
     },
 };
