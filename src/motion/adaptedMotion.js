@@ -6,7 +6,12 @@ import {
     onMounted,
     getCurrentInstance,
 } from "vue";
-import { motion, AnimatePresence, useReducedMotion } from "motion-v";
+import {
+    motion,
+    AnimatePresence,
+    useReducedMotion,
+    useTransform,
+} from "motion-v";
 import {
     adaptKeyframe,
     adaptVariants,
@@ -24,6 +29,19 @@ function buildIdentityFrom(target) {
         result[key] = getNeutralValue(key);
     }
     return result;
+}
+
+// is this a useScroll/useTransform value (a MotionValue) on a spatial style?
+const SPATIAL_KEYS = new Set(["x", "y", "translateX", "translateY"]);
+function isMotionValue(v) {
+    return v !== null && typeof v === "object" && typeof v.get === "function";
+}
+
+// reads big % slides like "500%" — anything ≥100% is off-screen-ish
+function isLargeSlide(sampled) {
+    if (typeof sampled !== "string") return false;
+    const n = parseFloat(sampled);
+    return !isNaN(n) && Math.abs(n) >= 100 && sampled.trim().endsWith("%");
 }
 
 /**
@@ -70,6 +88,27 @@ function createAdaptedMotionComponent(element) {
 
             // Measured element size — populated on mount and used to pick size-appropriate thresholds
             const elementSize = ref(null);
+
+            // for any scroll-driven y/x MotionValue starting at a big slide,
+            // build a derived opacity that fades in as the slide settles
+            const scrollOpacity = (() => {
+                if (!attrs.style || typeof attrs.style !== "object") return null;
+                for (const [key, val] of Object.entries(attrs.style)) {
+                    if (!SPATIAL_KEYS.has(key)) continue;
+                    if (!isMotionValue(val)) continue;
+                    if (!isLargeSlide(val.get())) continue;
+                    return useTransform(val, (v) => {
+                        const n =
+                            typeof v === "string"
+                                ? Math.abs(parseFloat(v))
+                                : Math.abs(v);
+                        if (isNaN(n)) return 1;
+                        // 0% → opacity 1, ≥100% → opacity 0
+                        return Math.max(0, Math.min(1, 1 - n / 100));
+                    });
+                }
+                return null;
+            })();
 
             onMounted(() => {
                 const el = getCurrentInstance()?.proxy?.$el;
@@ -250,17 +289,16 @@ function createAdaptedMotionComponent(element) {
                     result.animate = { opacity: 0 };
                 }
 
-                // Strip scroll-driven MotionValues from :style (parallax suppression)
+                // strip scroll-driven MotionValues from :style — but if one
+                // was a big slide we already built an opacity from it, swap
+                // that in instead of nuking the entrance entirely
                 if (result.style && typeof result.style === "object") {
                     const filteredStyle = {};
                     for (const [key, val] of Object.entries(result.style)) {
-                        const isMotionValue =
-                            val !== null &&
-                            typeof val === "object" &&
-                            typeof val.get === "function";
-                        if (!isMotionValue) {
-                            filteredStyle[key] = val;
-                        }
+                        if (!isMotionValue(val)) filteredStyle[key] = val;
+                    }
+                    if (scrollOpacity && filteredStyle.opacity === undefined) {
+                        filteredStyle.opacity = scrollOpacity;
                     }
                     result.style = filteredStyle;
                 }

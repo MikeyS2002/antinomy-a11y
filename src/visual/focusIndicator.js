@@ -161,6 +161,14 @@ function promoteElement(el) {
     if (el.hasAttribute(PROMOTED_ATTR)) return;
     el.setAttribute("tabindex", "0");
     el.setAttribute(PROMOTED_ATTR, "true");
+    // tabindex alone doesnt make Enter/Space fire the click — wire that up too
+    el.addEventListener("keydown", onPromotedKeydown);
+}
+
+function onPromotedKeydown(e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    e.currentTarget.click();
 }
 
 function reEvaluateClickables() {

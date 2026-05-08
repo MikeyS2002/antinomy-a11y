@@ -1175,13 +1175,16 @@ function gt(e) {
 	return t === "a" || t === "button" || t === "input" || t === "textarea" || t === "select" || t === "details" || t === "summary" ? !1 : ht(e);
 }
 function _t(e) {
-	e.hasAttribute(ft) || (e.setAttribute("tabindex", "0"), e.setAttribute(ft, "true"));
+	e.hasAttribute(ft) || (e.setAttribute("tabindex", "0"), e.setAttribute(ft, "true"), e.addEventListener("keydown", vt));
+}
+function vt(e) {
+	e.key !== "Enter" && e.key !== " " || (e.preventDefault(), e.currentTarget.click());
 }
 function J() {
 	let e = document.querySelectorAll(pt);
 	for (let t of e) gt(t) && _t(t);
 }
-function vt() {
+function yt() {
 	typeof window > "u" || (mt = new MutationObserver(() => {
 		J();
 	}), mt.observe(document.body, {
@@ -1200,30 +1203,30 @@ function vt() {
 	}));
 }
 var Y = null;
-function yt(e) {
+function bt(e) {
 	let t = e.target;
 	if (!nt(t) || !t.matches(":focus-visible")) return;
 	let n = et($e(t), Y.color);
 	t.dataset._a11yFocusOriginalOutline = t.style.outline || "", t.dataset._a11yFocusOriginalOffset = t.style.outlineOffset || "", t.style.outline = `${Y.width} ${Y.style} ${n}`, t.style.outlineOffset = Y.offset;
 }
-function bt(e) {
+function xt(e) {
 	let t = e.target;
 	"_a11yFocusOriginalOutline" in t.dataset && (t.style.outline = t.dataset._a11yFocusOriginalOutline, t.style.outlineOffset = t.dataset._a11yFocusOriginalOffset, delete t.dataset._a11yFocusOriginalOutline, delete t.dataset._a11yFocusOriginalOffset);
 }
-var xt = {
+var St = {
 	width: "2px",
 	offset: "2px",
 	style: "solid",
 	color: "#2563eb"
-}, St = { install(e, t = {}) {
+}, Ct = { install(e, t = {}) {
 	typeof window > "u" || (Y = {
-		...xt,
+		...St,
 		...t
-	}, document.addEventListener("focusin", yt, !0), document.addEventListener("focusout", bt, !0), dt(), vt());
+	}, document.addEventListener("focusin", bt, !0), document.addEventListener("focusout", xt, !0), dt(), yt());
 } };
 //#endregion
 //#region src/visual/vAriaLabel.js
-function Ct(e) {
+function wt(e) {
 	let t = e.getAttribute("aria-label");
 	if (t && t.trim()) return t.trim();
 	let n = e.getAttribute("aria-labelledby");
@@ -1243,13 +1246,13 @@ function Ct(e) {
 	}
 	return null;
 }
-function wt(e) {
+function Tt(e) {
 	return `<${e.tagName.toLowerCase()}${typeof e.className == "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/)[0] : ""}>`;
 }
-var Tt = {
+var Et = {
 	mounted(e, t) {
 		typeof t.value == "string" && t.value.trim() && e.setAttribute("aria-label", t.value.trim()), requestAnimationFrame(() => {
-			Ct(e) || console.warn(`[a11y-aria] ${wt(e)} has no accessible name — add v-aria-label="'...'" or text content`, e);
+			wt(e) || console.warn(`[a11y-aria] ${Tt(e)} has no accessible name — add v-aria-label="'...'" or text content`, e);
 		});
 	},
 	updated(e, t) {
@@ -1258,7 +1261,7 @@ var Tt = {
 };
 //#endregion
 //#region src/visual/ariaAudit.js
-function Et(e) {
+function Dt(e) {
 	let t = e.getAttribute("aria-label");
 	if (t && t.trim()) return t.trim();
 	let n = e.getAttribute("aria-labelledby");
@@ -1281,30 +1284,30 @@ function Et(e) {
 	}
 	return null;
 }
-function Dt(e) {
+function Ot(e) {
 	return `<${e.tagName.toLowerCase()}${e.id ? `#${e.id}` : ""}${typeof e.className == "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/)[0] : ""}>`;
 }
 var X = /* @__PURE__ */ new WeakSet();
-function Ot(e) {
+function kt(e) {
 	if (X.has(e)) return;
 	let t = getComputedStyle(e);
-	if (!(t.display === "none" || t.visibility === "hidden") && !Et(e)) {
+	if (!(t.display === "none" || t.visibility === "hidden") && !Dt(e)) {
 		if (e.tagName === "IMG") {
-			e.getAttribute("alt") === null && (X.add(e), console.warn(`[a11y-aria] ${Dt(e)} is missing alt attribute`, e));
+			e.getAttribute("alt") === null && (X.add(e), console.warn(`[a11y-aria] ${Ot(e)} is missing alt attribute`, e));
 			return;
 		}
-		X.add(e), console.warn(`[a11y-aria] ${Dt(e)} has no accessible name`, e);
+		X.add(e), console.warn(`[a11y-aria] ${Ot(e)} has no accessible name`, e);
 	}
 }
-var kt = "button, a[href], input:not([type=hidden]), textarea, select, [role=button], [role=link], img";
-function At() {
-	let e = document.querySelectorAll(kt);
-	for (let t of e) Ot(t);
+var At = "button, a[href], input:not([type=hidden]), textarea, select, [role=button], [role=link], img";
+function jt() {
+	let e = document.querySelectorAll(At);
+	for (let t of e) kt(t);
 }
-var jt = { install() {
+var Mt = { install() {
 	typeof window > "u" || requestAnimationFrame(() => {
 		requestAnimationFrame(() => {
-			At();
+			jt();
 		});
 	});
 } };
@@ -1314,7 +1317,7 @@ function Z(e) {
 	return `<${e.tagName.toLowerCase()}${e.id ? `#${e.id}` : ""}${typeof e.className == "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/)[0] : ""}>`;
 }
 var Q = /* @__PURE__ */ new WeakSet();
-function Mt() {
+function Nt() {
 	let e = document.querySelectorAll("[tabindex]");
 	for (let t of e) {
 		if (Q.has(t)) continue;
@@ -1322,7 +1325,7 @@ function Mt() {
 		e > 0 && (Q.add(t), console.warn(`[a11y-keyboard] ${Z(t)} has tabindex="${e}" — positive values disrupt natural tab order (WCAG 2.4.3)`, t));
 	}
 }
-function Nt() {
+function Pt() {
 	let e = document.querySelectorAll("div, span");
 	for (let t of e) {
 		if (Q.has(t) || !(t.onclick !== null || t.getAttribute("onclick"))) continue;
@@ -1330,30 +1333,30 @@ function Nt() {
 		(!(n !== null && n !== "-1") || !(e === "button" || e === "link")) && (Q.add(t), console.warn(`[a11y-keyboard] ${Z(t)} has a click handler but is not keyboard-accessible — add role="button" and tabindex="0" or use a <button> (WCAG 2.1.1)`, t));
 	}
 }
-function Pt() {
+function Ft() {
 	document.querySelector("main, [role=main]") || console.warn("[a11y-keyboard] page has no <main> landmark — keyboard users cannot skip past repeated content (WCAG 2.4.1)");
 }
-var Ft = "data-a11y-scrollable-fix";
-function It(e) {
+var It = "data-a11y-scrollable-fix";
+function Lt(e) {
 	let t = getComputedStyle(e), n = t.overflowX, r = t.overflowY;
 	return !(n === "auto" || n === "scroll") && !(r === "auto" || r === "scroll") ? !1 : e.scrollWidth > e.clientWidth || e.scrollHeight > e.clientHeight;
 }
-function Lt(e) {
+function Rt(e) {
 	let t = e.querySelectorAll("a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]");
 	for (let e of t) if (e.getAttribute("tabindex") !== "-1") return !0;
 	return !1;
 }
-function Rt() {
-	let e = document.querySelectorAll("div, section, article, ul, ol, nav");
-	for (let t of e) t.hasAttribute(Ft) || t.hasAttribute("tabindex") || It(t) && (Lt(t) || (t.setAttribute("tabindex", "0"), t.setAttribute(Ft, "true"), console.info(`[a11y-keyboard] ${Z(t)} is a scrollable region with no focusable children — added tabindex="0" so it is keyboard-reachable (WCAG 2.1.1)`, t)));
-}
 function zt() {
-	Mt(), Nt(), Pt(), Rt();
+	let e = document.querySelectorAll("div, section, article, ul, ol, nav");
+	for (let t of e) t.hasAttribute(It) || t.hasAttribute("tabindex") || Lt(t) && (Rt(t) || (t.setAttribute("tabindex", "0"), t.setAttribute(It, "true"), console.info(`[a11y-keyboard] ${Z(t)} is a scrollable region with no focusable children — added tabindex="0" so it is keyboard-reachable (WCAG 2.1.1)`, t)));
 }
-var Bt = { install() {
+function Bt() {
+	Nt(), Pt(), Ft(), zt();
+}
+var Vt = { install() {
 	typeof window > "u" || requestAnimationFrame(() => {
 		requestAnimationFrame(() => {
-			zt();
+			Bt();
 		});
 	});
 } };
@@ -1362,7 +1365,7 @@ var Bt = { install() {
 function $(e) {
 	return `<${e.tagName.toLowerCase()}${e.id ? `#${e.id}` : ""}${typeof e.className == "string" && e.className.trim() ? "." + e.className.trim().split(/\s+/)[0] : ""}>`;
 }
-function Vt() {
+function Ht() {
 	let e = document.querySelectorAll("h1, h2, h3, h4, h5, h6");
 	if (e.length === 0) return;
 	let t = document.querySelectorAll("h1");
@@ -1373,31 +1376,31 @@ function Vt() {
 		n > 0 && e > n + 1 && console.warn(`[a11y-semantic] ${$(t)} skips from h${n} to h${e} — use sequential heading levels (WCAG 1.3.1)`, t), n = e;
 	}
 }
-function Ht() {
+function Ut() {
 	document.querySelector("main, [role=main]") || console.warn("[a11y-semantic] page has no <main> landmark — screen readers rely on this to identify primary content (WCAG 1.3.1)");
 	let e = document.querySelectorAll("main, [role=main]");
 	e.length > 1 && console.warn(`[a11y-semantic] page has ${e.length} <main> landmarks — there should be exactly one (WCAG 1.3.1)`, Array.from(e));
 }
-function Ut() {
+function Wt() {
 	let e = document.querySelectorAll("button, a[href]");
 	for (let t of e) t.querySelector("button, a[href]") && console.warn(`[a11y-semantic] ${$(t)} contains a nested interactive element — interactive elements should not be nested (WCAG 1.3.1, 4.1.2)`, t);
 }
-function Wt() {
+function Gt() {
 	let e = document.querySelectorAll("input:not([type=hidden]):not([type=submit]):not([type=button]), textarea, select");
 	for (let t of e) {
 		let e = t.id, n = e && document.querySelector(`label[for="${e}"]`), r = t.getAttribute("aria-label"), i = t.getAttribute("aria-labelledby"), a = t.closest("label");
 		!n && !r && !i && !a && console.warn(`[a11y-semantic] ${$(t)} has no associated <label> — form fields need explicit labels (WCAG 4.1.2)`, t);
 	}
 }
-function Gt() {
-	Vt(), Ht(), Ut(), Wt();
+function Kt() {
+	Ht(), Ut(), Wt(), Gt();
 }
-var Kt = { install() {
+var qt = { install() {
 	typeof window > "u" || requestAnimationFrame(() => {
 		requestAnimationFrame(() => {
-			Gt();
+			Kt();
 		});
 	});
 } };
 //#endregion
-export { St as a, Fe as c, R as d, B as f, Oe as g, Ae as h, Tt as i, V as l, je as m, Bt as n, Ze as o, H as p, jt as r, Ue as s, Kt as t, ke as u };
+export { Ct as a, Fe as c, R as d, B as f, Oe as g, Ae as h, Et as i, V as l, je as m, Vt as n, Ze as o, H as p, Mt as r, Ue as s, qt as t, ke as u };
