@@ -11,8 +11,20 @@ import {
     adaptKeyframe,
     adaptVariants,
     buildReducedTransition,
+    getNeutralValue,
 } from "./adaptMotion.js";
 import { propertyCategories } from "./config.js";
+
+// vue keeps attr casing as written so we check both forms below
+
+// hover/tap have no initial, fake one at rest so the classifier has both ends
+function buildIdentityFrom(target) {
+    const result = {};
+    for (const key of Object.keys(target)) {
+        result[key] = getNeutralValue(key);
+    }
+    return result;
+}
 
 /**
  * Returns true if initial or animate contains a ±100% slide on a spatial property.
@@ -97,7 +109,10 @@ function createAdaptedMotionComponent(element) {
 
                 // When size hasn't been measured yet, assume large so we don't
                 // play animations that would be stripped post-measurement.
-                const sizeForAdapt = elementSize.value ?? { width: Infinity, height: Infinity };
+                const sizeForAdapt = elementSize.value ?? {
+                    width: Infinity,
+                    height: Infinity,
+                };
 
                 if (result.variants && typeof result.variants === "object") {
                     result.variants = adaptVariants(
@@ -115,28 +130,73 @@ function createAdaptedMotionComponent(element) {
                         ? result.animate
                         : null;
 
-                if (initial && animate) {
+                // pick the target keyframe — animate first, else whileInView
+                // so initial+whileInView gets adapted like initial+animate
+                let inViewKey = null;
+                let inViewValue = null;
+                if (animate) {
+                    inViewValue = animate;
+                } else if (
+                    result.whileInView &&
+                    typeof result.whileInView === "object"
+                ) {
+                    inViewKey = "whileInView";
+                    inViewValue = result.whileInView;
+                } else if (
+                    result["while-in-view"] &&
+                    typeof result["while-in-view"] === "object"
+                ) {
+                    inViewKey = "while-in-view";
+                    inViewValue = result["while-in-view"];
+                }
+
+                if (initial && inViewValue) {
                     result.initial = adaptKeyframe(
                         initial,
-                        animate,
+                        inViewValue,
                         initial,
                         sizeForAdapt,
                     );
-                    result.animate = adaptKeyframe(
+                    const adaptedTarget = adaptKeyframe(
                         initial,
-                        animate,
-                        animate,
+                        inViewValue,
+                        inViewValue,
                         sizeForAdapt,
                     );
+                    if (inViewKey) {
+                        result[inViewKey] = adaptedTarget;
+                    } else {
+                        result.animate = adaptedTarget;
+                    }
 
                     if (result.exit && typeof result.exit === "object") {
                         result.exit = adaptKeyframe(
                             initial,
-                            animate,
+                            inViewValue,
                             result.exit,
                             sizeForAdapt,
                         );
                     }
+                }
+
+                // hover/tap/focus/drag — same deal but from = rest state
+                const INTERACTION_TRIGGERS = [
+                    ["whileHover", "while-hover"],
+                    ["whileTap", "while-tap"],
+                    ["whileFocus", "while-focus"],
+                    ["whileDrag", "while-drag"],
+                ];
+                for (const [camel, kebab] of INTERACTION_TRIGGERS) {
+                    const usedKey = result[camel] !== undefined ? camel : kebab;
+                    const target = result[usedKey];
+                    if (!target || typeof target !== "object") continue;
+
+                    result[usedKey] = adaptKeyframe(
+                        buildIdentityFrom(target),
+                        target,
+                        target,
+                        sizeForAdapt,
+                    );
                 }
 
                 // Handle :exit

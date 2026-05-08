@@ -27,7 +27,7 @@
     "license": "ISC",
     "peerDependencies": {
         "vue": "^3.4.0",
-        "motion-v": "^2.0.0"
+        "motion-v": "^1.7.4 || ^2.0.0"
     },
     "dependencies": {
         "focus-trap": "^8.0.1"

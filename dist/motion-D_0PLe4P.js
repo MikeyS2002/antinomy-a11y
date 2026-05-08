@@ -203,7 +203,12 @@ function j(e) {
 }
 //#endregion
 //#region src/motion/adaptedMotion.js
-function M(e, t) {
+function M(e) {
+	let t = {};
+	for (let n of Object.keys(e)) t[n] = j(n);
+	return t;
+}
+function N(e, t) {
 	if (!e || !t) return !1;
 	for (let n of [
 		"x",
@@ -225,7 +230,7 @@ function M(e, t) {
 	]) if (e[n] === 0 || t[n] === 0) return !0;
 	return !1;
 }
-function N(e) {
+function P(e) {
 	return i({
 		name: `adaptedMotion.${e}`,
 		inheritAttrs: !1,
@@ -240,7 +245,7 @@ function N(e) {
 						height: n
 					};
 				}
-				if (!d.value || !M(l.initial, l.animate)) return;
+				if (!d.value || !N(l.initial, l.animate)) return;
 				let t = e?.getAttribute?.("data-ap");
 				if (!t || typeof document > "u" || document.querySelectorAll(`[data-ap="${t}"]`).length <= 1) return;
 				f.value = !1;
@@ -256,8 +261,22 @@ function N(e) {
 					height: Infinity
 				};
 				e.variants && typeof e.variants == "object" && (e.variants = T(e.variants, t));
-				let n = e.initial && typeof e.initial == "object" ? e.initial : null, r = e.animate && typeof e.animate == "object" ? e.animate : null;
-				if (n && r && (e.initial = C(n, r, n, t), e.animate = C(n, r, r, t), e.exit && typeof e.exit == "object" && (e.exit = C(n, r, e.exit, t))), e.exit && typeof e.exit == "object" && e.exit.transition) {
+				let n = e.initial && typeof e.initial == "object" ? e.initial : null, r = e.animate && typeof e.animate == "object" ? e.animate : null, i = null, a = null;
+				if (r ? a = r : e.whileInView && typeof e.whileInView == "object" ? (i = "whileInView", a = e.whileInView) : e["while-in-view"] && typeof e["while-in-view"] == "object" && (i = "while-in-view", a = e["while-in-view"]), n && a) {
+					e.initial = C(n, a, n, t);
+					let r = C(n, a, a, t);
+					i ? e[i] = r : e.animate = r, e.exit && typeof e.exit == "object" && (e.exit = C(n, a, e.exit, t));
+				}
+				for (let [n, r] of [
+					["whileHover", "while-hover"],
+					["whileTap", "while-tap"],
+					["whileFocus", "while-focus"],
+					["whileDrag", "while-drag"]
+				]) {
+					let i = e[n] === void 0 ? r : n, a = e[i];
+					!a || typeof a != "object" || (e[i] = C(M(a), a, a, t));
+				}
+				if (e.exit && typeof e.exit == "object" && e.exit.transition) {
 					let t = e.exit.transition, { transition: n, ...r } = e.exit, i = new Set(Object.keys(r));
 					e.exit = {
 						...r,
@@ -286,7 +305,7 @@ function N(e) {
 		}
 	});
 }
-var P = {}, F = i({
+var F = {}, I = i({
 	name: "AdaptedAnimatePresence",
 	setup(t, { attrs: i, slots: a }) {
 		let s = n(), c = r(() => s.value ? {
@@ -295,8 +314,8 @@ var P = {}, F = i({
 		} : i);
 		return () => o(e, c.value, a);
 	}
-}), I = new Proxy({ AnimatePresence: F }, { get(e, t) {
-	return t in e ? e[t] : (P[t] || (P[t] = N(t)), P[t]);
+}), L = new Proxy({ AnimatePresence: I }, { get(e, t) {
+	return t in e ? e[t] : (F[t] || (F[t] = P(t)), F[t]);
 } });
 //#endregion
-export { p as _, D as a, k as c, b as d, x as f, m as g, f as h, T as i, A as l, h as m, C as n, E as o, v as p, w as r, j as s, I as t, O as u, l as v };
+export { p as _, D as a, k as c, b as d, x as f, m as g, f as h, T as i, A as l, h as m, C as n, E as o, v as p, w as r, j as s, L as t, O as u, l as v };

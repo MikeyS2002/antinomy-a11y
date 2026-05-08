@@ -59,10 +59,69 @@ function checkMainLandmark() {
     }
 }
 
+// WCAG 2.1.1 scrollable regions must be reachable by keyboard.
+// matches axe-core's `scrollable-region-focusable`: a container that overflows
+// its content needs either a focusable child or its own tabindex so a keyboard
+// user can scroll it.
+const SCROLLABLE_FIXED_ATTR = "data-a11y-scrollable-fix";
+
+function isScrollable(el) {
+    const style = getComputedStyle(el);
+    const overflowX = style.overflowX;
+    const overflowY = style.overflowY;
+    // match axe-core's heuristic: the CSS declares scrollability *and* the
+    // content can overflow. axe also flags overflow:auto regions even when
+    // content currently fits, so be permissive — the tabindex fix is harmless
+    // when the region happens not to need scrolling.
+    const xScroll = overflowX === "auto" || overflowX === "scroll";
+    const yScroll = overflowY === "auto" || overflowY === "scroll";
+    if (!xScroll && !yScroll) return false;
+    // require *some* overflowable content so we don't tabindex every random
+    // overflow:auto wrapper that has no children
+    return el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight;
+}
+
+function hasFocusableChild(el) {
+    // candidates: anything that's natively focusable or has tabindex >= 0
+    const candidates = el.querySelectorAll(
+        "a[href], button:not([disabled]), input:not([type=hidden]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]",
+    );
+    for (const c of candidates) {
+        // tabindex="-1" makes natively-focusable elements unreachable too,
+        // so exclude them. focusIndicator's hidden-focusable sweep uses this
+        // pattern to suppress buttons inside opacity:0 ancestors.
+        const ti = c.getAttribute("tabindex");
+        if (ti === "-1") continue;
+        return true;
+    }
+    return false;
+}
+
+function fixScrollableRegions() {
+    const els = document.querySelectorAll("div, section, article, ul, ol, nav");
+    for (const el of els) {
+        if (el.hasAttribute(SCROLLABLE_FIXED_ATTR)) continue;
+        if (el.hasAttribute("tabindex")) continue;
+        if (!isScrollable(el)) continue;
+        if (hasFocusableChild(el)) continue;
+
+        // safe auto-fix: make the container itself keyboard-scrollable so
+        // arrow keys can pan its content. Adds it to the tab order, which is
+        // the trade-off WCAG asks for.
+        el.setAttribute("tabindex", "0");
+        el.setAttribute(SCROLLABLE_FIXED_ATTR, "true");
+        console.info(
+            `[a11y-keyboard] ${elDescriptor(el)} is a scrollable region with no focusable children — added tabindex="0" so it is keyboard-reachable (WCAG 2.1.1)`,
+            el,
+        );
+    }
+}
+
 function auditAll() {
     checkPositiveTabindex();
     checkClickableNonInteractive();
     checkMainLandmark();
+    fixScrollableRegions();
 }
 
 /**
@@ -75,6 +134,9 @@ function auditAll() {
  *   - tabindex > 0
  *   - click handlers on non-interactive elements without keyboard support
  *   - missing <main> landmark
+ *
+ * auto-fixes:
+ *   - scrollable regions with no focusable children get tabindex="0"
  */
 export const keyboardAudit = {
     install() {
